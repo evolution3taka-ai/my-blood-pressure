@@ -594,21 +594,23 @@ function checkPwaGuide() {
 function updateConciergeAdvice() {
   const data = getStoredData();
   const adviceEl = document.getElementById('concierge-advice');
-  if (!adviceEl) return;
+  const avatarEl = document.getElementById('concierge-avatar');
+  if (!adviceEl || !avatarEl) return;
   
   if (data.length === 0) {
-    adviceEl.textContent = '今日もお疲れ様！血圧を測ったら、下のフォームから記録して教えてね！ラテ先生がアドバイスするよ🐩';
+    avatarEl.src = 'latte_cheer.jpg';
+    adviceEl.textContent = '今日もお疲れ様！血圧を測ったら、下のフォームに書いて教えてね。ラテ先生がいつでも待ってるよ！🐩';
     return;
   }
   
   if (data.length < 3) {
-    adviceEl.textContent = '記録してくれてありがとう！まずは数日間、毎日続けて測ってみてね。ラテ先生も応援してるよ！🐾';
+    avatarEl.src = 'latte_cheer.jpg';
+    adviceEl.textContent = '記録してくれてありがとう！まずは3日間、朝と夜に続けて測ってみようね。三日坊主にならないよう応援してるよ！🐾';
     return;
   }
   
   // 直近5件の平均血圧を計算
   const recentRecords = data.slice(0, 5);
-  const count = recentRecords.length;
   let sumSystolic = 0;
   let sumDiastolic = 0;
   let validCount = 0;
@@ -625,6 +627,7 @@ function updateConciergeAdvice() {
   
   // 有効なデータがなければ終了
   if (validCount === 0) {
+    avatarEl.src = 'latte_cheer.jpg';
     adviceEl.textContent = '血圧を記録して教えてね！ラテ先生がアドバイスするよ🐩';
     return;
   }
@@ -633,14 +636,29 @@ function updateConciergeAdvice() {
   const avgDia = Math.round(sumDiastolic / validCount);
   
   let adviceText = '';
+  let avatarSrc = 'concierge.jpg'; // デフォルト笑顔
   
-  // 基準による全体アドバイス
-  if (avgSys >= 135 || avgDia >= 85) {
-    adviceText = '最近の血圧は、少し高めの状態が続いているみたい。暖かくしてゆっくり休んでね。もし頭痛や肩こりがあるときは、無理せずお医者さんにも相談してみてね🩺';
-  } else if (avgSys >= 125 || avgDia >= 80) {
-    adviceText = '最近は少しだけ血圧が高めの日があるみたい。お味噌汁の汁を半分残すなど、ほんの少し塩分を控えめにしてみようね🍵';
+  // 診断のバリエーション（8段階）
+  if (avgSys >= 160 || avgDia >= 100) {
+    // 非常に高い
+    avatarSrc = 'latte_alert.jpg';
+    adviceText = '血圧がかなり高い状態だよ。急激な運動は控えて、部屋を暖かくして静かに過ごしてね。頭痛やめまいがあるときは、お医者さんに相談してね🩺';
+  } else if (avgSys >= 135 || avgDia >= 85) {
+    // I度高血圧（高い）
+    avatarSrc = 'latte_alert.jpg';
+    adviceText = '最近の血圧は、少し高めの状態が続いているみたい。暖かくしてゆっくり休んでね。お風呂はぬるめのお湯にゆっくり浸かろう🛀';
+  } else if (avgSys >= 130 || avgDia >= 80) {
+    // 高値血圧（少し高い）
+    avatarSrc = 'latte_worried.jpg';
+    adviceText = '最近ちょっとだけ血圧が高い日があるみたい。お味噌汁の汁を残したり、お漬物を少し減らして減塩を意識してみようね🍵';
+  } else if (avgSys >= 120) {
+    // 正常高値（少し高め・正常内）
+    avatarSrc = 'concierge.jpg';
+    adviceText = '少し血圧が高めだけど、まだ正常の範囲内だよ。軽いストレッチをしたり、野菜を多めに食べるのを意識してみてね🥦';
   } else {
-    adviceText = '最近の血圧はとってもいい感じだよ！素晴らしい！この調子で毎日元気に過ごしてね☀️';
+    // 正常（良い）
+    avatarSrc = 'concierge.jpg';
+    adviceText = '血圧はばっちり正常範囲内！とっても健康的だよ。素晴らしい！この調子で毎日元気に過ごしてね🌟';
   }
   
   // 追加アドバイス：朝と夜の血圧差チェック (早朝高血圧傾向)
@@ -663,5 +681,26 @@ function updateConciergeAdvice() {
     }
   }
   
+  // 追加アドバイス：脈拍平均チェック
+  let sumPulse = 0;
+  let pulseCount = 0;
+  recentRecords.forEach(r => {
+    const p = parseInt(r.pulse);
+    if (!isNaN(p)) {
+      sumPulse += p;
+      pulseCount++;
+    }
+  });
+  
+  if (pulseCount > 0) {
+    const avgPulse = Math.round(sumPulse / pulseCount);
+    if (avgPulse >= 90) {
+      adviceText += ' 最近少し脈拍が早い日があるみたい。ゆっくり深呼吸を3回して、リラックスして過ごしてね🐾';
+    } else if (avgPulse <= 55) {
+      adviceText += ' 脈拍が少しゆっくりめみたい。体が冷えていないかな？温かい生姜湯などを飲んで温まってね☕️';
+    }
+  }
+  
+  avatarEl.src = avatarSrc;
   adviceEl.textContent = adviceText;
 }
