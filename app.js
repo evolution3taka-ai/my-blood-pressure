@@ -247,13 +247,15 @@ function loadHistory() {
     itemEl.className = `history-item ${statusClass}`;
     
     itemEl.innerHTML = `
-      <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️</button>
       <div class="history-item-header">
         <div class="history-item-time">
           <strong>${dateStr}</strong>
           <span>${item.time} (${icon})</span>
         </div>
-        <span class="status-badge ${badgeClass}">${statusLabel}</span>
+        <div class="history-item-actions">
+          <span class="status-badge ${badgeClass}">${statusLabel}</span>
+          <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️</button>
+        </div>
       </div>
       <div class="history-item-body">
         <div class="bp-values-display">
