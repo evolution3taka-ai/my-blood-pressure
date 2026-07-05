@@ -663,7 +663,7 @@ header p {
   transform: translateX(-50%) translateY(0);
 }
 
-/* コンシェルジュ（うさこ先生）のスタイル */
+/* コンシェルジュ（ラテ先生）のスタイル */
 .concierge-card {
   padding: 16px;
   background-color: var(--color-card-bg);
@@ -673,13 +673,13 @@ header p {
 .concierge-container {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px; /* スマホ用に余白を少し狭く */
 }
 
-/* キャラクターの画像（丸型、ふわふわ揺れる） */
+/* キャラクターの画像（丸型、ふわふわ揺れる、スマホ用に少し小さめの68pxに調整） */
 .concierge-avatar {
-  width: 82px;
-  height: 82px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: var(--shadow-sm);
@@ -693,18 +693,18 @@ header p {
   position: relative;
   background-color: #fff9db; /* 優しいクリーム色 */
   border-radius: var(--radius-sm);
-  padding: 14px 16px;
+  padding: 10px 14px; /* スマホ用に内側余白を少し小さく */
   flex-grow: 1;
   box-shadow: var(--shadow-sm);
   border: 1px solid #ffe066;
 }
 
-/* 吹き出しの三角（しっぽ） */
+/* 吹き出しの三角（しっぽ、位置を調整） */
 .speech-bubble::before {
   content: '';
   position: absolute;
   left: -12px;
-  top: 30px;
+  top: 24px;
   border-width: 6px 12px 6px 0;
   border-style: solid;
   border-color: transparent #ffe066 transparent transparent;
@@ -714,7 +714,7 @@ header p {
   content: '';
   position: absolute;
   left: -10px;
-  top: 30px;
+  top: 24px;
   border-width: 6px 12px 6px 0;
   border-style: solid;
   border-color: transparent #fff9db transparent transparent;
