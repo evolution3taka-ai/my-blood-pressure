@@ -23,6 +23,7 @@
 
   <!-- 記録完了ポップアップ -->
   <div id="success-modal" class="success-modal">
+    <div class="sunburst" id="success-sunburst"></div>
     <div class="success-content">
       <div class="success-particles" id="success-particles"></div>
       <img src="latte_cheer.jpg" alt="ラテ先生" class="success-avatar-pop">
@@ -112,6 +113,14 @@
         <span>💾</span> 記録を保存する
       </button>
     </main>
+
+    <!-- 月選択ドロップダウン -->
+    <div class="month-filter-container card">
+      <label for="select-month" class="month-filter-label">📅 表示する月を選ぶ</label>
+      <select id="select-month" class="select-month">
+        <option value="all">すべての月を表示</option>
+      </select>
+    </div>
 
     <!-- 表示切り替えタブ -->
     <div class="tabs">

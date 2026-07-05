@@ -6,8 +6,9 @@ const STORAGE_KEY = 'bp_tracker_data';
 // 読み込み完了時の処理
 document.addEventListener('DOMContentLoaded', () => {
   initDateTime();
-  loadHistory();
   setupEventListeners();
+  updateMonthDropdown();
+  loadHistory();
   checkPwaGuide();
   registerServiceWorker();
   updateConciergeAdvice();
@@ -114,6 +115,15 @@ function setupEventListeners() {
     document.getElementById('pwa-guide').classList.remove('show');
     localStorage.setItem('bp_pwa_guide_dismissed', 'true');
   });
+
+  // 月選択ドロップダウンの変更イベント
+  document.getElementById('select-month').addEventListener('change', () => {
+    loadHistory();
+    const secChart = document.getElementById('section-chart');
+    if (secChart.style.display !== 'none') {
+      renderChart();
+    }
+  });
 }
 
 // 3. データの保存
@@ -169,6 +179,7 @@ function saveData() {
   saveDataToStorage(data);
   
   // 画面の更新
+  updateMonthDropdown();
   loadHistory();
   updateConciergeAdvice();
   
@@ -216,8 +227,25 @@ function loadHistory() {
     `;
     return;
   }
+
+  // 選択された月でフィルタリング
+  const selectMonth = document.getElementById('select-month');
+  const selectedMonthVal = selectMonth ? selectMonth.value : 'all';
+  const filteredData = selectedMonthVal === 'all' 
+    ? data 
+    : data.filter(item => item.date.startsWith(selectedMonthVal));
+
+  if (filteredData.length === 0) {
+    historyList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <p>この月の記録はありません。</p>
+      </div>
+    `;
+    return;
+  }
   
-  data.forEach(item => {
+  filteredData.forEach(item => {
     // 血圧値の判定（家庭血圧の基準：正常 125/80 未満、高血圧 135/85 以上）
     let statusClass = 'status-normal';
     let statusLabel = '正常';
@@ -291,6 +319,7 @@ window.deleteRecord = function(id) {
     let data = getStoredData();
     data = data.filter(item => item.id !== id);
     saveDataToStorage(data);
+    updateMonthDropdown();
     loadHistory();
     updateConciergeAdvice();
     
@@ -332,10 +361,33 @@ function renderChart() {
     ctx.fillText('データが登録されるとここにグラフが表示されます。', ctx.canvas.width / 2, ctx.canvas.height / 2);
     return;
   }
+
+  // 選択された月でフィルタリング
+  const selectMonth = document.getElementById('select-month');
+  const selectedMonthVal = selectMonth ? selectMonth.value : 'all';
+  const filteredData = selectedMonthVal === 'all' 
+    ? data 
+    : data.filter(item => item.date.startsWith(selectedMonthVal));
+
+  if (filteredData.length === 0) {
+    if (bpChartInstance) {
+      bpChartInstance.destroy();
+      bpChartInstance = null;
+    }
+    // グラフキャンバスをクリアしてテキスト表示
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.font = '16px Noto Sans JP';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('この月のデータはありません。', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    return;
+  }
   
   // グラフ用にデータを古い順（時系列）にする
-  // 直近14回分のデータにする
-  const chartData = [...data].reverse().slice(-14);
+  // 「すべて」の場合は直近14回分、特定の月の場合はその月の全データ（最大31回分）にする
+  const limit = selectedMonthVal === 'all' ? 14 : 31;
+  const chartData = [...filteredData].reverse().slice(-limit);
   
   const labels = chartData.map(item => {
     const d = new Date(item.date);
@@ -539,6 +591,7 @@ function importBackupData() {
     
     if (confirm('データを読み込みます。現在記録されているデータは上書きされ、消えてしまいますが、よろしいですか？')) {
       saveDataToStorage(parsedData);
+      updateMonthDropdown();
       loadHistory();
       initDateTime();
       updateConciergeAdvice();
@@ -716,10 +769,10 @@ function showSuccessModal() {
   // 以前のパーティクルをクリア
   particlesContainer.innerHTML = '';
 
-  // キラキラ・ハートのパーティクルを動的に生成して散らす
-  const colors = ['#ff6b81', '#ff4757', '#ffd43b', '#4ea8de', '#2ecc71', '#e599f7'];
-  const symbols = ['♥', '★', '✨', '🌸', '🐾'];
-  const particleCount = 30;
+  // キラキラ・ハートのパーティクルを動的に生成して散らす（数を増やし、より華やかに）
+  const colors = ['#ff6b81', '#ff4757', '#ffd43b', '#4ea8de', '#2ecc71', '#ff922b', '#da77f2'];
+  const symbols = ['♥', '★', '✨', '🌸', '🐾', '🎉', '🌟', '💮', '🍀'];
+  const particleCount = 65;
 
   for (let i = 0; i < particleCount; i++) {
     const p = document.createElement('div');
@@ -756,4 +809,43 @@ function showSuccessModal() {
   setTimeout(() => {
     modal.classList.remove('show');
   }, 1800);
+}
+
+// 12. 月選択ドロップダウンの動的生成
+function updateMonthDropdown() {
+  const selectMonth = document.getElementById('select-month');
+  if (!selectMonth) return;
+  
+  // 現在選択されている値を記憶
+  const prevValue = selectMonth.value || 'all';
+  
+  const data = getStoredData();
+  
+  // 重複しない年月(YYYY-MM)を抽出
+  const monthsSet = new Set();
+  data.forEach(item => {
+    if (item.date && item.date.length >= 7) {
+      monthsSet.add(item.date.substring(0, 7));
+    }
+  });
+  
+  // 配列化して降順（新しい順）に並び替え
+  const sortedMonths = Array.from(monthsSet).sort().reverse();
+  
+  // 選択肢のクリア
+  selectMonth.innerHTML = '<option value="all">すべての月を表示</option>';
+  
+  // 選択肢の追加
+  sortedMonths.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    // 表示用のフォーマット "YYYY年MM月"
+    const parts = m.split('-');
+    opt.textContent = `${parts[0]}年${parseInt(parts[1])}月`;
+    selectMonth.appendChild(opt);
+  });
+  
+  // 選択されていた値を復元（なければ 'all'）
+  const hasPrevValue = sortedMonths.includes(prevValue);
+  selectMonth.value = hasPrevValue ? prevValue : 'all';
 }
