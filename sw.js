@@ -1,10 +1,11 @@
-const CACHE_NAME = 'bp-tracker-v1';
+const CACHE_NAME = 'bp-tracker-v3';
 const ASSETS = [
   'index.html',
   'style.css',
   'app.js',
   'manifest.json',
-  'icon.jpg'
+  'icon.jpg',
+  'concierge.jpg'
 ];
 
 // インストール時にアセットをキャッシュ

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   checkPwaGuide();
   registerServiceWorker();
+  updateConciergeAdvice();
 });
 
 // サービスワーカーの登録
@@ -169,6 +170,7 @@ function saveData() {
   
   // 画面の更新
   loadHistory();
+  updateConciergeAdvice();
   
   // フォームの一部リセット
   systolicInput.value = '';
@@ -288,6 +290,7 @@ window.deleteRecord = function(id) {
     data = data.filter(item => item.id !== id);
     saveDataToStorage(data);
     loadHistory();
+    updateConciergeAdvice();
     
     // グラフが表示中の場合は再描画
     const secChart = document.getElementById('section-chart');
@@ -536,6 +539,7 @@ function importBackupData() {
       saveDataToStorage(parsedData);
       loadHistory();
       initDateTime();
+      updateConciergeAdvice();
       
       // グラフ再描画
       const secChart = document.getElementById('section-chart');
@@ -584,4 +588,65 @@ function checkPwaGuide() {
   setTimeout(() => {
     guide.classList.add('show');
   }, 3000);
+}
+
+// 10. コンシェルジュ（ラテ先生）の診断・アドバイスロジック
+function updateConciergeAdvice() {
+  const data = getStoredData();
+  const adviceEl = document.getElementById('concierge-advice');
+  if (!adviceEl) return;
+  
+  if (data.length === 0) {
+    adviceEl.textContent = '今日もお疲れ様！血圧を測ったら、下のフォームから記録して教えてね！ラテ先生がアドバイスするよ🐩';
+    return;
+  }
+  
+  if (data.length < 3) {
+    adviceEl.textContent = '記録してくれてありがとう！まずは数日間、毎日続けて測ってみてね。ラテ先生も応援してるよ！🐾';
+    return;
+  }
+  
+  // 直近5件の平均血圧を計算
+  const recentRecords = data.slice(0, 5);
+  const count = recentRecords.length;
+  let sumSystolic = 0;
+  let sumDiastolic = 0;
+  
+  recentRecords.forEach(r => {
+    sumSystolic += r.systolic;
+    sumDiastolic += r.diastolic;
+  });
+  
+  const avgSys = Math.round(sumSystolic / count);
+  const avgDia = Math.round(sumDiastolic / count);
+  
+  let adviceText = '';
+  
+  // 基準による全体アドバイス
+  if (avgSys >= 135 || avgDia >= 85) {
+    adviceText = '最近の血圧は、少し高めの状態が続いているみたい。暖かくしてゆっくり休んでね。もし頭痛や肩こりがあるときは、無理せずお医者さんにも相談してみてね🩺';
+  } else if (avgSys >= 125 || avgDia >= 80) {
+    adviceText = '最近は少しだけ血圧が高めの日があるみたい。お味噌汁の汁を半分残すなど、ほんの少し塩分を控えめにしてみようね🍵';
+  } else {
+    adviceText = '最近の血圧はとってもいい感じだよ！素晴らしい！この調子で毎日元気に過ごしてね☀️';
+  }
+  
+  // 追加アドバイス：朝と夜の血圧差チェック (早朝高血圧傾向)
+  const morningRecords = data.filter(r => r.period === 'morning');
+  const eveningRecords = data.filter(r => r.period === 'evening');
+  
+  if (morningRecords.length >= 2 && eveningRecords.length >= 2) {
+    const sumMorningSys = morningRecords.slice(0, 3).reduce((sum, r) => sum + r.systolic, 0);
+    const avgMorningSys = sumMorningSys / Math.min(morningRecords.length, 3);
+    
+    const sumEveningSys = eveningRecords.slice(0, 3).reduce((sum, r) => sum + r.systolic, 0);
+    const avgEveningSys = sumEveningSys / Math.min(eveningRecords.length, 3);
+    
+    // 朝が夜より 15 以上高い場合
+    if (avgMorningSys - avgEveningSys >= 15) {
+      adviceText += '（★朝の血圧が夜より高くなりやすいみたい。朝起きたらお布団の中で手足をグーパー動かしてから、ゆっくり起き上がるといいよ！🐶）';
+    }
+  }
+  
+  adviceEl.textContent = adviceText;
 }
