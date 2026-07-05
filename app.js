@@ -611,14 +611,26 @@ function updateConciergeAdvice() {
   const count = recentRecords.length;
   let sumSystolic = 0;
   let sumDiastolic = 0;
+  let validCount = 0;
   
   recentRecords.forEach(r => {
-    sumSystolic += r.systolic;
-    sumDiastolic += r.diastolic;
+    const sys = parseInt(r.systolic);
+    const dia = parseInt(r.diastolic);
+    if (!isNaN(sys) && !isNaN(dia)) {
+      sumSystolic += sys;
+      sumDiastolic += dia;
+      validCount++;
+    }
   });
   
-  const avgSys = Math.round(sumSystolic / count);
-  const avgDia = Math.round(sumDiastolic / count);
+  // 有効なデータがなければ終了
+  if (validCount === 0) {
+    adviceEl.textContent = '血圧を記録して教えてね！ラテ先生がアドバイスするよ🐩';
+    return;
+  }
+  
+  const avgSys = Math.round(sumSystolic / validCount);
+  const avgDia = Math.round(sumDiastolic / validCount);
   
   let adviceText = '';
   
@@ -632,15 +644,18 @@ function updateConciergeAdvice() {
   }
   
   // 追加アドバイス：朝と夜の血圧差チェック (早朝高血圧傾向)
-  const morningRecords = data.filter(r => r.period === 'morning');
-  const eveningRecords = data.filter(r => r.period === 'evening');
+  const morningRecords = data.filter(r => r.period === 'morning' && !isNaN(parseInt(r.systolic)));
+  const eveningRecords = data.filter(r => r.period === 'evening' && !isNaN(parseInt(r.systolic)));
   
   if (morningRecords.length >= 2 && eveningRecords.length >= 2) {
-    const sumMorningSys = morningRecords.slice(0, 3).reduce((sum, r) => sum + r.systolic, 0);
-    const avgMorningSys = sumMorningSys / Math.min(morningRecords.length, 3);
+    const morningCount = Math.min(morningRecords.length, 3);
+    const eveningCount = Math.min(eveningRecords.length, 3);
     
-    const sumEveningSys = eveningRecords.slice(0, 3).reduce((sum, r) => sum + r.systolic, 0);
-    const avgEveningSys = sumEveningSys / Math.min(eveningRecords.length, 3);
+    const sumMorningSys = morningRecords.slice(0, morningCount).reduce((sum, r) => sum + parseInt(r.systolic), 0);
+    const avgMorningSys = sumMorningSys / morningCount;
+    
+    const sumEveningSys = eveningRecords.slice(0, eveningCount).reduce((sum, r) => sum + parseInt(r.systolic), 0);
+    const avgEveningSys = sumEveningSys / eveningCount;
     
     // 朝が夜より 15 以上高い場合
     if (avgMorningSys - avgEveningSys >= 15) {
