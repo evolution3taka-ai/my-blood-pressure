@@ -1,0 +1,18 @@
+{
+  "short_name": "血圧手帳",
+  "name": "かんたん血圧手帳",
+  "description": "おばちゃんでも管理しやすい血圧管理アプリ",
+  "icons": [
+    {
+      "src": "icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#f5f7fb",
+  "theme_color": "#ff6b81",
+  "display": "standalone",
+  "orientation": "portrait"
+}

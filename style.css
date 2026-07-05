@@ -1,0 +1,664 @@
+/* Google Fonts から読みやすく親しみやすいフォントをインポート */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+/* デザイン変数（カスタムプロパティ）の定義 */
+:root {
+  --font-main: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* 温かみがあり視認性の高いカラーパレット */
+  --color-bg: #f5f7fb;
+  --color-card-bg: #ffffff;
+  --color-text-main: #2c3e50;
+  --color-text-muted: #7f8c8d;
+  
+  --color-primary: #ff6b81;       /* 温かみのあるピンク（朝・メイン） */
+  --color-primary-hover: #ff4757;
+  --color-secondary: #4ea8de;     /* 爽やかなブルー（夜・脈拍） */
+  --color-secondary-hover: #0077b6;
+  
+  /* 血圧状態判定用の優しい色合い */
+  --color-normal: #2ecc71;        /* 正常：緑 */
+  --color-warning: #f39c12;       /* やや高め：オレンジ */
+  --color-danger: #e74c3c;        /* 高い：赤 */
+  
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+  
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 全体のリセットと基本設定 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを無効化 */
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* スマホ表示に最適化した最大幅の設定 */
+.app-container {
+  width: 100%;
+  max-width: 500px;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+/* ヘッダーデザイン */
+header {
+  text-align: center;
+  padding: 12px 0 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-main);
+  letter-spacing: -0.5px;
+}
+
+header p {
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+/* 基本的なカードのスタイル */
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  transition: var(--transition);
+}
+
+.card:active {
+  transform: scale(0.99);
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-main);
+}
+
+/* 入力フォームのスタイル */
+.form-group-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-main);
+  text-align: center;
+}
+
+/* シニア向けに超巨大で見やすい入力欄 */
+.input-bp {
+  width: 100%;
+  height: 68px;
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  border: 3px solid #e0e6ed;
+  border-radius: var(--radius-sm);
+  background-color: #fafbfc;
+  color: var(--color-text-main);
+  outline: none;
+  transition: var(--transition);
+}
+
+.input-bp:focus {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(255, 107, 129, 0.15);
+}
+
+.input-unit {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* 日付・時間選択フォーム */
+.datetime-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.input-date, .input-time {
+  height: 52px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  border: 2px solid #e0e6ed;
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+  color: var(--color-text-main);
+  outline: none;
+  background-color: #ffffff;
+}
+
+.input-date:focus, .input-time:focus {
+  border-color: var(--color-secondary);
+}
+
+/* 朝・夜の切り替えスイッチ（ボタン） */
+.ampm-switch-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ampm-switch-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.ampm-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ampm-btn {
+  height: 54px;
+  font-size: 18px;
+  font-weight: 700;
+  border: 2px solid #e0e6ed;
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.ampm-btn.morning.active {
+  border-color: #f1c40f;
+  background-color: #fef9e7;
+  color: #b7950b;
+}
+
+.ampm-btn.evening.active {
+  border-color: #9b59b6;
+  background-color: #f4ecf7;
+  color: #6c3483;
+}
+
+/* メモ入力 */
+.memo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.input-memo {
+  width: 100%;
+  height: 54px;
+  font-size: 16px;
+  padding: 12px;
+  border: 2px solid #e0e6ed;
+  border-radius: var(--radius-sm);
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.input-memo:focus {
+  border-color: var(--color-secondary);
+}
+
+/* 大きくて押しやすい保存ボタン */
+.btn-submit {
+  width: 100%;
+  height: 64px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), #ff4757);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 16px rgba(255, 107, 129, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: var(--transition);
+}
+
+.btn-submit:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 6px rgba(255, 107, 129, 0.2);
+}
+
+/* タブ切り替え（グラフと履歴の表示切り替え用） */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: #e2e8f0;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  margin-bottom: 4px;
+}
+
+.tab-btn {
+  height: 48px;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: calc(var(--radius-md) - 4px);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.tab-btn.active {
+  background-color: #ffffff;
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 履歴リストのデザイン */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* スクロールバーのカスタマイズ */
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.history-item {
+  background-color: #fafbfc;
+  border-left: 6px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: var(--transition);
+}
+
+/* 血圧判定ごとのボーダーカラー */
+.history-item.status-normal { border-left-color: var(--color-normal); }
+.history-item.status-warning { border-left-color: var(--color-warning); }
+.history-item.status-danger { border-left-color: var(--color-danger); }
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.history-item-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-item-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bp-values-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.bp-value-large {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.bp-slash {
+  font-size: 20px;
+  color: var(--color-text-muted);
+  margin: 0 4px;
+}
+
+.pulse-value-display {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.pulse-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.history-item-footer {
+  font-size: 15px;
+  color: var(--color-text-main);
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: #fee2e2;
+  color: #ef4444;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: var(--transition);
+}
+
+.delete-btn:active {
+  transform: scale(0.9);
+  background-color: #fca5a5;
+}
+
+/* 判定ラベルのバッジ */
+.status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #ffffff;
+}
+.status-badge.bg-normal { background-color: var(--color-normal); }
+.status-badge.bg-warning { background-color: var(--color-warning); }
+.status-badge.bg-danger { background-color: var(--color-danger); }
+
+/* 空状態のメッセージ */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* グラフコンテナ */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+/* 設定・データ管理関連 */
+.settings-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-btn {
+  height: 52px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  color: var(--color-text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.settings-btn:active {
+  background-color: #f1f5f9;
+}
+
+/* バックアップモーダル/エリア */
+.backup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.backup-section p {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.textarea-backup {
+  width: 100%;
+  height: 100px;
+  font-size: 14px;
+  padding: 10px;
+  border: 2px solid #e0e6ed;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  outline: none;
+}
+
+.backup-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-action {
+  height: 46px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.btn-action.copy {
+  background-color: #e2e8f0;
+  color: var(--color-text-main);
+}
+.btn-action.copy:active { background-color: #cbd5e1; }
+
+.btn-action.import {
+  background-color: #dcfce7;
+  color: #166534;
+}
+.btn-action.import:active { background-color: #bbf7d0; }
+
+/* スマホホーム追加用のガイド（PWA案内ポップアップ） */
+.pwa-guide {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(150%);
+  width: calc(100% - 32px);
+  max-width: 460px;
+  background-color: #1e293b;
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pwa-guide.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.pwa-guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pwa-guide-title {
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pwa-guide-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.pwa-guide-content {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.pwa-guide-steps {
+  margin-top: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.pwa-guide-steps ol {
+  padding-left: 20px;
+}
+
+.pwa-guide-steps li {
+  margin-bottom: 6px;
+}
+
+.pwa-guide-steps li:last-child {
+  margin-bottom: 0;
+}
+
+/* 通知トースト */
+.toast {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background-color: #2c3e50;
+  color: #ffffff;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 2000;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}

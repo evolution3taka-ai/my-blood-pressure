@@ -1,0 +1,587 @@
+// アプリのデータ管理と画面制御
+
+// データのキー定義
+const STORAGE_KEY = 'bp_tracker_data';
+
+// 読み込み完了時の処理
+document.addEventListener('DOMContentLoaded', () => {
+  initDateTime();
+  loadHistory();
+  setupEventListeners();
+  checkPwaGuide();
+  registerServiceWorker();
+});
+
+// サービスワーカーの登録
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then((reg) => {
+        console.log('Service Worker 登録成功:', reg.scope);
+      })
+      .catch((err) => {
+        console.error('Service Worker 登録失敗:', err);
+      });
+  }
+}
+
+// 1. 日付と時間の初期設定
+function initDateTime() {
+  const now = new Date();
+  
+  // 日付の設定 (YYYY-MM-DD)
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('input-date').value = `${yyyy}-${mm}-${dd}`;
+  
+  // 時間の設定 (HH:MM)
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('input-time').value = `${hh}:${min}`;
+  
+  // 朝・夜の自動判別 (12:00 前なら朝、以降なら夜)
+  const isMorning = now.getHours() < 12;
+  setPeriod(isMorning ? 'morning' : 'evening');
+}
+
+// 朝・夜ボタンのアクティブ切り替え
+function setPeriod(period) {
+  const btnMorning = document.getElementById('btn-morning');
+  const btnEvening = document.getElementById('btn-evening');
+  
+  if (period === 'morning') {
+    btnMorning.classList.add('active');
+    btnEvening.classList.remove('active');
+    btnMorning.dataset.active = 'true';
+    btnEvening.dataset.active = 'false';
+  } else {
+    btnMorning.classList.remove('active');
+    btnEvening.classList.add('active');
+    btnMorning.dataset.active = 'false';
+    btnEvening.dataset.active = 'true';
+  }
+}
+
+// 2. イベントリスナーの設定
+function setupEventListeners() {
+  // 朝・夜ボタン
+  document.getElementById('btn-morning').addEventListener('click', () => setPeriod('morning'));
+  document.getElementById('btn-evening').addEventListener('click', () => setPeriod('evening'));
+  
+  // 記録を保存するボタン
+  document.getElementById('btn-submit').addEventListener('click', saveData);
+  
+  // タブ切り替え（履歴 / グラフ）
+  const tabHistory = document.getElementById('tab-history');
+  const tabChart = document.getElementById('tab-chart');
+  const secHistory = document.getElementById('section-history');
+  const secChart = document.getElementById('section-chart');
+  
+  tabHistory.addEventListener('click', () => {
+    tabHistory.classList.add('active');
+    tabChart.classList.remove('active');
+    secHistory.style.display = 'block';
+    secChart.style.display = 'none';
+  });
+  
+  tabChart.addEventListener('click', () => {
+    tabHistory.classList.remove('active');
+    tabChart.classList.add('active');
+    secHistory.style.display = 'none';
+    secChart.style.display = 'block';
+    renderChart(); // グラフ表示時に描画
+  });
+  
+  // バックアップ・復元エリアの表示切り替え
+  const btnToggleBackup = document.getElementById('btn-toggle-backup');
+  const backupArea = document.getElementById('backup-area');
+  btnToggleBackup.addEventListener('click', () => {
+    const isHidden = backupArea.style.display === 'none';
+    backupArea.style.display = isHidden ? 'flex' : 'none';
+    if (isHidden) {
+      prepareBackupText();
+    }
+  });
+  
+  // コピー・インポート
+  document.getElementById('btn-copy-backup').addEventListener('click', copyBackupText);
+  document.getElementById('btn-import-backup').addEventListener('click', importBackupData);
+  
+  // PWA案内ポップアップの閉じるボタン
+  document.getElementById('pwa-guide-close').addEventListener('click', () => {
+    document.getElementById('pwa-guide').classList.remove('show');
+    localStorage.setItem('bp_pwa_guide_dismissed', 'true');
+  });
+}
+
+// 3. データの保存
+function saveData() {
+  const systolicInput = document.getElementById('bp-systolic');
+  const diastolicInput = document.getElementById('bp-diastolic');
+  const pulseInput = document.getElementById('pulse');
+  const memoInput = document.getElementById('memo');
+  const dateInput = document.getElementById('input-date');
+  const timeInput = document.getElementById('input-time');
+  
+  const systolic = parseInt(systolicInput.value);
+  const diastolic = parseInt(diastolicInput.value);
+  const pulse = parseInt(pulseInput.value);
+  const memo = memoInput.value.trim();
+  const date = dateInput.value;
+  const time = timeInput.value;
+  const period = document.getElementById('btn-morning').dataset.active === 'true' ? 'morning' : 'evening';
+  
+  // 簡単なバリデーション（空チェックと数値範囲）
+  if (isNaN(systolic) || isNaN(diastolic) || isNaN(pulse)) {
+    alert('「最高（上）」「最低（下）」「脈拍」を数字で入力してください。');
+    return;
+  }
+  
+  if (systolic < 40 || systolic > 250 || diastolic < 30 || diastolic > 180 || pulse < 30 || pulse > 200) {
+    alert('入力された数値が異常に大きいか小さいです。もう一度確認してください。');
+    return;
+  }
+
+  const newRecord = {
+    id: Date.now().toString(),
+    date,
+    time,
+    period,
+    systolic,
+    diastolic,
+    pulse,
+    memo
+  };
+  
+  // データの読み込みと追加
+  const data = getStoredData();
+  data.push(newRecord);
+  
+  // 日付と時間で並び替え（新しい順）
+  data.sort((a, b) => {
+    const dateTimeA = new Date(`${a.date}T${a.time}`);
+    const dateTimeB = new Date(`${b.date}T${b.time}`);
+    return dateTimeB - dateTimeA;
+  });
+  
+  saveDataToStorage(data);
+  
+  // 画面の更新
+  loadHistory();
+  
+  // フォームの一部リセット
+  systolicInput.value = '';
+  diastolicInput.value = '';
+  pulseInput.value = '';
+  memoInput.value = '';
+  
+  // 日時をその瞬間に更新
+  initDateTime();
+  
+  // トースト通知を表示
+  showToast();
+  
+  // もしバックアップエリアが開いていたらテキスト更新
+  if (document.getElementById('backup-area').style.display !== 'none') {
+    prepareBackupText();
+  }
+}
+
+// 4. ローカルストレージ操作ヘルパー
+function getStoredData() {
+  const rawData = localStorage.getItem(STORAGE_KEY);
+  return rawData ? JSON.parse(rawData) : [];
+}
+
+function saveDataToStorage(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// 5. 履歴データの読み込みと描画
+function loadHistory() {
+  const data = getStoredData();
+  const historyList = document.getElementById('history-list');
+  historyList.innerHTML = '';
+  
+  if (data.length === 0) {
+    historyList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <p>まだ血圧の記録がありません。</p>
+        <p style="font-size: 14px; margin-top: 4px;">上のフォームから記録してみましょう！</p>
+      </div>
+    `;
+    return;
+  }
+  
+  data.forEach(item => {
+    // 血圧値の判定（家庭血圧の基準：正常 125/80 未満、高血圧 135/85 以上）
+    let statusClass = 'status-normal';
+    let statusLabel = '正常';
+    let badgeClass = 'bg-normal';
+    
+    if (item.systolic >= 135 || item.diastolic >= 85) {
+      statusClass = 'status-danger';
+      statusLabel = '高いよ';
+      badgeClass = 'bg-danger';
+    } else if ((item.systolic >= 125 && item.systolic < 135) || (item.diastolic >= 80 && item.diastolic < 85)) {
+      statusClass = 'status-warning';
+      statusLabel = '少し高め';
+      badgeClass = 'bg-warning';
+    } else {
+      statusClass = 'status-normal';
+      statusLabel = 'いい感じ';
+      badgeClass = 'bg-normal';
+    }
+    
+    // 日付を「月/日」に整形
+    const dateObj = new Date(item.date);
+    const dateStr = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+    
+    const icon = item.period === 'morning' ? '☀️ 朝' : '🌙 夜';
+    
+    const itemEl = document.createElement('div');
+    itemEl.className = `history-item ${statusClass}`;
+    
+    itemEl.innerHTML = `
+      <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️</button>
+      <div class="history-item-header">
+        <div class="history-item-time">
+          <strong>${dateStr}</strong>
+          <span>${item.time} (${icon})</span>
+        </div>
+        <span class="status-badge ${badgeClass}">${statusLabel}</span>
+      </div>
+      <div class="history-item-body">
+        <div class="bp-values-display">
+          <span class="bp-value-large">${item.systolic}</span>
+          <span class="bp-slash">/</span>
+          <span class="bp-value-large">${item.diastolic}</span>
+          <span class="input-unit" style="margin-left: 6px;">mmHg</span>
+        </div>
+        <div class="pulse-value-display">
+          脈拍 <span class="pulse-num">${item.pulse}</span>
+        </div>
+      </div>
+      ${item.memo ? `<div class="history-item-footer"><strong>メモ:</strong> ${escapeHtml(item.memo)}</div>` : ''}
+    `;
+    
+    historyList.appendChild(itemEl);
+  });
+}
+
+// 安全なHTMLエスケープ
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// データの削除（グローバル定義してonclickで動作するようにする）
+window.deleteRecord = function(id) {
+  if (confirm('この記録を消してもよろしいですか？')) {
+    let data = getStoredData();
+    data = data.filter(item => item.id !== id);
+    saveDataToStorage(data);
+    loadHistory();
+    
+    // グラフが表示中の場合は再描画
+    const secChart = document.getElementById('section-chart');
+    if (secChart.style.display !== 'none') {
+      renderChart();
+    }
+    
+    // バックアップテキスト更新
+    if (document.getElementById('backup-area').style.display !== 'none') {
+      prepareBackupText();
+    }
+  }
+};
+
+// 6. トースト通知表示
+function showToast() {
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2000);
+}
+
+// 7. Chart.js による折れ線グラフ描画
+let bpChartInstance = null;
+function renderChart() {
+  const ctx = document.getElementById('bpChart').getContext('2d');
+  const data = getStoredData();
+  
+  if (data.length === 0) {
+    if (bpChartInstance) {
+      bpChartInstance.destroy();
+      bpChartInstance = null;
+    }
+    ctx.font = '16px Noto Sans JP';
+    ctx.textAlign = 'center';
+    ctx.fillText('データが登録されるとここにグラフが表示されます。', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    return;
+  }
+  
+  // グラフ用にデータを古い順（時系列）にする
+  // 直近14回分のデータにする
+  const chartData = [...data].reverse().slice(-14);
+  
+  const labels = chartData.map(item => {
+    const d = new Date(item.date);
+    const p = item.period === 'morning' ? '朝' : '夜';
+    return `${d.getMonth() + 1}/${d.getDate()}(${p})`;
+  });
+  
+  const systolicData = chartData.map(item => item.systolic);
+  const diastolicData = chartData.map(item => item.diastolic);
+  const pulseData = chartData.map(item => item.pulse);
+  
+  if (bpChartInstance) {
+    bpChartInstance.destroy();
+  }
+  
+  bpChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '最高血圧 (上)',
+          data: systolicData,
+          borderColor: '#ff6b81',
+          backgroundColor: '#ff6b81',
+          borderWidth: 4,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          tension: 0.15,
+          yAxisID: 'y'
+        },
+        {
+          label: '最低血圧 (下)',
+          data: diastolicData,
+          borderColor: '#4ea8de',
+          backgroundColor: '#4ea8de',
+          borderWidth: 4,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          tension: 0.15,
+          yAxisID: 'y'
+        },
+        {
+          label: '脈拍',
+          data: pulseData,
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.2)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 4,
+          tension: 0.15,
+          yAxisID: 'yPulse',
+          hidden: true // 最初はスッキリさせるために非表示にしておき、凡例タップで出せるようにする
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              family: 'Noto Sans JP',
+              size: 14,
+              weight: 'bold'
+            },
+            color: '#2c3e50'
+          }
+        },
+        tooltip: {
+          titleFont: { family: 'Noto Sans JP', size: 14 },
+          bodyFont: { family: 'Noto Sans JP', size: 14 }
+        }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          min: 40,
+          max: 200,
+          title: {
+            display: true,
+            text: '血圧 (mmHg)',
+            font: { family: 'Noto Sans JP', size: 12, weight: 'bold' }
+          },
+          ticks: {
+            font: { family: 'Noto Sans JP', size: 12 }
+          }
+        },
+        yPulse: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          min: 40,
+          max: 120,
+          grid: {
+            drawOnChartArea: false // 脈拍用グリッド線を隠して重なりを防ぐ
+          },
+          title: {
+            display: true,
+            text: '脈拍 (拍/分)',
+            font: { family: 'Noto Sans JP', size: 12, weight: 'bold' }
+          },
+          ticks: {
+            font: { family: 'Noto Sans JP', size: 12 }
+          }
+        },
+        x: {
+          ticks: {
+            font: { family: 'Noto Sans JP', size: 11 },
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      }
+    }
+  });
+}
+
+// 8. バックアップ機能
+function prepareBackupText() {
+  const data = getStoredData();
+  const textarea = document.getElementById('textarea-backup');
+  if (data.length === 0) {
+    textarea.value = '';
+    return;
+  }
+  // おばちゃんがコピーしやすいよう、単なるJSONではなくBase64文字列にエンコードして簡単な英数字の文字列にする
+  try {
+    const jsonStr = JSON.stringify(data);
+    // UTF-8対応のBase64エンコード
+    const utf8Bytes = new TextEncoder().encode(jsonStr);
+    let binary = '';
+    const len = utf8Bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(utf8Bytes[i]);
+    }
+    const base64 = btoa(binary);
+    textarea.value = base64;
+  } catch (e) {
+    console.error(e);
+    textarea.value = JSON.stringify(data);
+  }
+}
+
+function copyBackupText() {
+  const textarea = document.getElementById('textarea-backup');
+  if (!textarea.value) {
+    alert('保存するデータがありません。');
+    return;
+  }
+  
+  textarea.select();
+  textarea.setSelectionRange(0, 99999); // スマホ対応
+  
+  try {
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      alert('コピーしました！LINEやメールの下書きなどに貼り付けて保存してください。');
+    }).catch(() => {
+      // クリップボードAPIが使えなかった場合の代替
+      document.execCommand('copy');
+      alert('コピーしました！');
+    });
+  } catch (err) {
+    alert('コピーに失敗しました。文字枠を長押しして手動でコピーしてください。');
+  }
+}
+
+function importBackupData() {
+  const rawInput = prompt('保存しておいたバックアップ文字をここに貼り付けてください（貼り付け後、「OK」を押します）：');
+  if (!rawInput) return;
+  
+  try {
+    let jsonStr = '';
+    // Base64デコードを試みる
+    try {
+      const decodedBinary = atob(rawInput.trim());
+      const bytes = new Uint8Array(decodedBinary.length);
+      for (let i = 0; i < decodedBinary.length; i++) {
+        bytes[i] = decodedBinary.charCodeAt(i);
+      }
+      jsonStr = new TextDecoder().decode(bytes);
+    } catch (e) {
+      // デコードに失敗した場合は直接JSONとして扱ってみる
+      jsonStr = rawInput.trim();
+    }
+    
+    const parsedData = JSON.parse(jsonStr);
+    
+    // 簡単な配列チェック
+    if (!Array.isArray(parsedData)) {
+      throw new Error('データ形式が正しくありません');
+    }
+    
+    if (confirm('データを読み込みます。現在記録されているデータは上書きされ、消えてしまいますが、よろしいですか？')) {
+      saveDataToStorage(parsedData);
+      loadHistory();
+      initDateTime();
+      
+      // グラフ再描画
+      const secChart = document.getElementById('section-chart');
+      if (secChart.style.display !== 'none') {
+        renderChart();
+      }
+      
+      // バックアップ文字列再生成
+      prepareBackupText();
+      
+      alert('読み込みが完了しました！');
+    }
+  } catch (err) {
+    alert('データの読み込みに失敗しました。正しい文字が貼り付けられているか確認してください。');
+  }
+}
+
+// 9. PWAインストールの案内表示
+function checkPwaGuide() {
+  // すでにPWAとして起動しているか、または過去に閉じた場合は表示しない
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const isDismissed = localStorage.getItem('bp_pwa_guide_dismissed') === 'true';
+  
+  if (isStandalone || isDismissed) {
+    return;
+  }
+  
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isIos = /iphone|ipad|ipod/.test(userAgent);
+  const isAndroid = /android/.test(userAgent);
+  
+  const guide = document.getElementById('pwa-guide');
+  const guideIos = document.getElementById('guide-ios');
+  const guideAndroid = document.getElementById('guide-android');
+  const guideOther = document.getElementById('guide-other');
+  
+  if (isIos) {
+    guideIos.style.display = 'block';
+    guideOther.style.display = 'none';
+  } else if (isAndroid) {
+    guideAndroid.style.display = 'block';
+    guideOther.style.display = 'none';
+  }
+  
+  // 3秒後にスライド表示
+  setTimeout(() => {
+    guide.classList.add('show');
+  }, 3000);
+}

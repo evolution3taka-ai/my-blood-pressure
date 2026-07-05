@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>かんたん血圧手帳</title>
+  
+  <!-- CSS の読み込み -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- PWA の設定ファイルの読み込み -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff6b81">
+  <link rel="apple-touch-icon" href="icon.jpg">
+  
+  <!-- Chart.js の CDN (軽量で美しい折れ線グラフ用) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- 通知用トースト -->
+  <div id="toast" class="toast">記録しました！</div>
+
+  <div class="app-container">
+    
+    <!-- ヘッダー -->
+    <header>
+      <div class="header-title-container">
+        <img src="icon.jpg" alt="アプリロゴ" class="header-logo">
+        <h1>かんたん血圧手帳</h1>
+      </div>
+      <p>毎日記録して健康を守りましょう</p>
+    </header>
+
+    <!-- 入力カード -->
+    <main class="card">
+      <div class="card-title">
+        <span>✏️</span> 血圧を記録する
+      </div>
+      
+      <!-- 朝・夜の切り替え -->
+      <div class="ampm-switch-container">
+        <span class="ampm-switch-label">測定する時間帯</span>
+        <div class="ampm-options">
+          <button type="button" id="btn-morning" class="ampm-btn morning active">
+            <span>☀️</span> 朝 (起きてすぐ)
+          </button>
+          <button type="button" id="btn-evening" class="ampm-btn evening">
+            <span>🌙</span> 夜 (寝る前など)
+          </button>
+        </div>
+      </div>
+
+      <!-- 日付・時間 -->
+      <div class="datetime-row">
+        <div class="form-group">
+          <input type="date" id="input-date" class="input-date" required>
+        </div>
+        <div class="form-group">
+          <input type="time" id="input-time" class="input-time" required>
+        </div>
+      </div>
+
+      <!-- 血圧・脈拍の入力欄（3連） -->
+      <div class="form-group-row">
+        <div class="form-group">
+          <label for="bp-systolic">最高（上）</label>
+          <input type="number" id="bp-systolic" class="input-bp" inputmode="numeric" placeholder="120" min="40" max="250" required>
+          <div class="input-unit">mmHg</div>
+        </div>
+        <div class="form-group">
+          <label for="bp-diastolic">最低（下）</label>
+          <input type="number" id="bp-diastolic" class="input-bp" inputmode="numeric" placeholder="80" min="30" max="180" required>
+          <div class="input-unit">mmHg</div>
+        </div>
+        <div class="form-group">
+          <label for="pulse">脈拍</label>
+          <input type="number" id="pulse" class="input-bp" inputmode="numeric" placeholder="70" min="30" max="200" required>
+          <div class="input-unit">拍/分</div>
+        </div>
+      </div>
+
+      <!-- メモ -->
+      <div class="memo-group">
+        <label for="memo" class="ampm-switch-label">メモ (体調やひとこと)</label>
+        <input type="text" id="memo" class="input-memo" placeholder="例: 体調が良い、少し頭痛がする など">
+      </div>
+
+      <!-- 保存ボタン -->
+      <button type="button" id="btn-submit" class="btn-submit">
+        <span>💾</span> 記録を保存する
+      </button>
+    </main>
+
+    <!-- 表示切り替えタブ -->
+    <div class="tabs">
+      <button type="button" id="tab-history" class="tab-btn active">
+        <span>📋</span> 履歴リスト
+      </button>
+      <button type="button" id="tab-chart" class="tab-btn">
+        <span>📈</span> グラフで見る
+      </button>
+    </div>
+
+    <!-- 履歴リストエリア -->
+    <section id="section-history" class="card">
+      <div class="card-title">
+        <span>📋</span> 過去の記録
+      </div>
+      <div id="history-list" class="history-list">
+        <!-- JavaScriptで履歴がここに挿入されます -->
+      </div>
+    </section>
+
+    <!-- グラフエリア -->
+    <section id="section-chart" class="card" style="display: none;">
+      <div class="card-title">
+        <span>📈</span> 血圧の推移
+      </div>
+      <div class="chart-container">
+        <canvas id="bpChart"></canvas>
+      </div>
+    </section>
+
+    <!-- 設定・管理カード -->
+    <section class="card">
+      <div class="card-title">
+        <span>⚙️</span> データ管理・バックアップ
+      </div>
+      <div class="settings-menu">
+        <button type="button" id="btn-toggle-backup" class="settings-btn">
+          <span>📤</span> スマホ買い替え・データの保存と復元
+        </button>
+        
+        <div id="backup-area" class="backup-section" style="display: none;">
+          <p>
+            機種変更や、別のスマホにデータを移したい場合は、下の枠の中の文字をすべてコピーして新しいスマホに貼り付けてください。
+          </p>
+          <textarea id="textarea-backup" class="textarea-backup" readonly placeholder="ここをコピーして保存します"></textarea>
+          
+          <div class="backup-actions">
+            <button type="button" id="btn-copy-backup" class="btn-action copy">
+              <span>📋</span> コピーする
+            </button>
+            <button type="button" id="btn-import-backup" class="btn-action import">
+              <span>📥</span> 読み込む
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- スマホホーム画面追加ガイド (PWA案内ポップアップ) -->
+  <div id="pwa-guide" class="pwa-guide">
+    <div class="pwa-guide-header">
+      <div class="pwa-guide-title">
+        <span>📱</span> スマホの画面にアプリとして登録
+      </div>
+      <button type="button" id="pwa-guide-close" class="pwa-guide-close">&times;</button>
+    </div>
+    <div class="pwa-guide-content">
+      このアプリは、ホーム画面に追加すると普通のアプリのように一タップで起動して使えるようになります！
+      <div class="pwa-guide-steps">
+        <strong>【追加方法】</strong>
+        <div id="guide-ios" style="display: none;">
+          <ol>
+            <li>画面下の共有ボタン <span>📤</span> (または <span>...</span>) を押します。</li>
+            <li>メニューから<strong>「ホーム画面に追加」</strong>を選びます。</li>
+          </ol>
+        </div>
+        <div id="guide-android" style="display: none;">
+          <ol>
+            <li>画面右上または右下のメニュー <span>⋮</span> を押します。</li>
+            <li>メニューから<strong>「ホーム画面に追加」</strong> (または「アプリをインストール」) を選びます。</li>
+          </ol>
+        </div>
+        <div id="guide-other">
+          ブラウザのメニューから<strong>「ホーム画面に追加」</strong>または<strong>「アプリをインストール」</strong>を選択してください。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- アプリロジック JS の読み込み -->
+  <script src="app.js"></script>
+</body>
+</html>
