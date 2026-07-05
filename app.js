@@ -181,8 +181,8 @@ function saveData() {
   // 日時をその瞬間に更新
   initDateTime();
   
-  // トースト通知を表示
-  showToast();
+  // 記録完了のポップアップ（ラテ先生とキラキラ）を表示
+  showSuccessModal();
   
   // もしバックアップエリアが開いていたらテキスト更新
   if (document.getElementById('backup-area').style.display !== 'none') {
@@ -705,4 +705,55 @@ function updateConciergeAdvice() {
   
   avatarEl.src = avatarSrc;
   adviceEl.textContent = adviceText;
+}
+
+// 11. 記録完了ポップアップ（アニメーション）の制御
+function showSuccessModal() {
+  const modal = document.getElementById('success-modal');
+  const particlesContainer = document.getElementById('success-particles');
+  if (!modal || !particlesContainer) return;
+
+  // 以前のパーティクルをクリア
+  particlesContainer.innerHTML = '';
+
+  // キラキラ・ハートのパーティクルを動的に生成して散らす
+  const colors = ['#ff6b81', '#ff4757', '#ffd43b', '#4ea8de', '#2ecc71', '#e599f7'];
+  const symbols = ['♥', '★', '✨', '🌸', '🐾'];
+  const particleCount = 30;
+
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    p.style.color = colors[Math.floor(Math.random() * colors.length)];
+    
+    // ランダムな方向と距離
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 80 + Math.random() * 150;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance - 50; // 少し上に吹き飛ばす
+    
+    // アニメーション用のCSSカスタムプロパティをセット
+    p.style.setProperty('--dx', `${dx}px`);
+    p.style.setProperty('--dy', `${dy}px`);
+    p.style.setProperty('--scale', 0.5 + Math.random() * 1.2);
+    p.style.setProperty('--rot', `${Math.random() * 360 - 180}deg`);
+    
+    // 初期配置位置のブレ
+    p.style.left = `${Math.random() * 20 - 10}px`;
+    p.style.top = `${Math.random() * 20 - 10}px`;
+    
+    // ディレイを付けてバラバラに飛ばす
+    p.style.animationDelay = `${Math.random() * 0.2}s`;
+
+    particlesContainer.appendChild(p);
+  }
+
+  // モーダルを表示
+  modal.classList.add('show');
+
+  // 1.8秒後に自動で閉じる
+  setTimeout(() => {
+    modal.classList.remove('show');
+  }, 1800);
 }

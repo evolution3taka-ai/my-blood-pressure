@@ -748,3 +748,115 @@ header p {
     transform: translateY(0);
   }
 }
+
+/* 記録完了ポップアップのスタイル */
+.success-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 暗い背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.success-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.success-content {
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: visible;
+  transform: scale(0.7);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success-modal.show .success-content {
+  transform: scale(1);
+  animation: success-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ポップアップ時のラテ先生 */
+.success-avatar-pop {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 4px solid #ffe3e3;
+  box-shadow: var(--shadow-md);
+  object-fit: cover;
+  margin-bottom: 16px;
+  animation: bounce-loop 1.5s infinite alternate ease-in-out;
+}
+
+.success-content h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.success-content p {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+/* パーティクル（キラキラ・ハート）のスタイル */
+.success-particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  font-size: 24px;
+  user-select: none;
+  animation: particle-fly 1.2s forwards cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+/* ポップアップの跳ねるアニメーション */
+@keyframes success-pop {
+  0% { transform: scale(0.5); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ラテ先生の上下運動アニメーション */
+@keyframes bounce-loop {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-8px) scale(1.03); }
+}
+
+/* パーティクルが飛び散って消えるアニメーション */
+@keyframes particle-fly {
+  0% {
+    transform: translate(0, 0) scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(var(--scale)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
