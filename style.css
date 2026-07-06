@@ -64,13 +64,35 @@ body {
 }
 
 /* ヘッダーデザイン */
-header {
-  text-align: center;
-  padding: 12px 0 4px 0;
+.app-header {
+  padding: 12px 4px 4px 4px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+}
+
+.btn-show-report-header {
+  height: 42px;
+  padding: 0 16px;
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 6px -1px rgba(78, 168, 222, 0.2);
+  transition: var(--transition);
+}
+
+.btn-show-report-header:active {
+  transform: scale(0.95);
+  background-color: #3d97c9;
 }
 
 .header-title-container {
@@ -87,16 +109,11 @@ header {
   box-shadow: var(--shadow-sm);
 }
 
-header h1 {
-  font-size: 26px;
+header h1, .app-header h1 {
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text-main);
   letter-spacing: -0.5px;
-}
-
-header p {
-  font-size: 15px;
-  color: var(--color-text-muted);
 }
 
 /* 基本的なカードのスタイル */
@@ -417,38 +434,42 @@ header p {
   color: var(--color-secondary);
 }
 
-.history-item-footer {
-  font-size: 15px;
-  color: var(--color-text-main);
-  background-color: rgba(0, 0, 0, 0.02);
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-top: 4px;
+.history-item-footer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 12px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 8px;
 }
 
-.history-item-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.history-item-memo-box {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
 .delete-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  padding: 6px 12px;
+  border-radius: 8px;
   border: none;
   background-color: #fee2e2;
   color: #ef4444;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
   transition: var(--transition);
 }
 
 .delete-btn:active {
-  transform: scale(0.9);
+  transform: scale(0.95);
   background-color: #fca5a5;
 }
 

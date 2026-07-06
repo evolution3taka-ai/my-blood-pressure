@@ -287,10 +287,7 @@ function loadHistory() {
           <strong>${dateStr}</strong>
           <span>${item.time} (${icon})</span>
         </div>
-        <div class="history-item-actions">
-          <span class="status-badge ${badgeClass}">${statusLabel}</span>
-          <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️</button>
-        </div>
+        <span class="status-badge ${badgeClass}">${statusLabel}</span>
       </div>
       <div class="history-item-body">
         <div class="bp-values-display">
@@ -303,7 +300,12 @@ function loadHistory() {
           脈拍 <span class="pulse-num">${item.pulse}</span>
         </div>
       </div>
-      ${item.memo ? `<div class="history-item-footer"><strong>メモ:</strong> ${escapeHtml(item.memo)}</div>` : ''}
+      <div class="history-item-footer-container">
+        <div class="history-item-memo-box">
+          ${item.memo ? `<strong>メモ:</strong> ${escapeHtml(item.memo)}` : ''}
+        </div>
+        <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️ 消す</button>
+      </div>
     `;
     
     historyList.appendChild(itemEl);

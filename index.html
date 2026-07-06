@@ -85,12 +85,14 @@
   <div class="app-container">
     
     <!-- ヘッダー -->
-    <header>
+    <header class="app-header">
       <div class="header-title-container">
         <img src="icon.jpg" alt="アプリロゴ" class="header-logo">
         <h1>かんたん血圧手帳</h1>
       </div>
-      <p>毎日記録して健康を守りましょう</p>
+      <button type="button" id="btn-show-report" class="btn-show-report-header">
+        🏥 先生へ
+      </button>
     </header>
 
     <!-- コンシェルジュ（ラテ先生）のアドバイスエリア -->
@@ -170,9 +172,6 @@
       <select id="select-month" class="select-month">
         <option value="all">すべての月を表示</option>
       </select>
-      <button type="button" id="btn-show-report" class="btn-show-report">
-        🏥 お医者さんに見せる画面を開く
-      </button>
     </div>
 
     <!-- 表示切り替えタブ -->
