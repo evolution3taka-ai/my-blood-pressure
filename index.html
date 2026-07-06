@@ -32,6 +32,56 @@
     </div>
   </div>
 
+  <!-- 医師提出用レポート画面（全画面） -->
+  <div id="report-modal" class="report-modal">
+    <div class="report-header">
+      <button type="button" id="btn-close-report" class="btn-close-report">❌ もとの画面にもどる</button>
+      <button type="button" id="btn-print-report" class="btn-print-report">🖨️ 紙に印刷する / PDF保存</button>
+    </div>
+    <div class="report-paper">
+      <h1 class="report-title">血圧記録レポート (お医者さん提出用)</h1>
+      <div class="report-meta">
+        <span id="report-month-label">期間: すべての月</span>
+        <span id="report-name-label">お名前: __________________</span>
+      </div>
+      
+      <!-- 医師向けのサマリー集計値 -->
+      <div class="report-summary">
+        <div class="summary-box">
+          <div class="summary-box-title">☀️ 朝の平均</div>
+          <div class="summary-box-val" id="report-avg-morning">- / - <span class="summary-unit">mmHg</span></div>
+          <div class="summary-box-pulse" id="report-pulse-morning">脈拍: -</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-box-title">🌙 夜の平均</div>
+          <div class="summary-box-val" id="report-avg-evening">- / - <span class="summary-unit">mmHg</span></div>
+          <div class="summary-box-pulse" id="report-pulse-evening">脈拍: -</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-box-title">📋 記録日数</div>
+          <div class="summary-box-val" id="report-total-days">0 <span class="summary-unit">日</span></div>
+        </div>
+      </div>
+
+      <!-- テーブル本体 -->
+      <div class="report-table-wrapper">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>☀️ 朝の記録<br><span style="font-size: 12px; font-weight: normal;">(最高/最低/脈拍)</span></th>
+              <th>🌙 夜の記録<br><span style="font-size: 12px; font-weight: normal;">(最高/最低/脈拍)</span></th>
+              <th>体調メモ・症状</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body">
+            <!-- JSで動的に1日1行のデータが入ります -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     
     <!-- ヘッダー -->
@@ -120,6 +170,9 @@
       <select id="select-month" class="select-month">
         <option value="all">すべての月を表示</option>
       </select>
+      <button type="button" id="btn-show-report" class="btn-show-report">
+        🏥 お医者さんに見せる画面を開く
+      </button>
     </div>
 
     <!-- 表示切り替えタブ -->

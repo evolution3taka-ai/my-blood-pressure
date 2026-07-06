@@ -124,6 +124,13 @@ function setupEventListeners() {
       renderChart();
     }
   });
+
+  // レポート（医師提出用）イベント
+  document.getElementById('btn-show-report').addEventListener('click', openReport);
+  document.getElementById('btn-close-report').addEventListener('click', closeReport);
+  document.getElementById('btn-print-report').addEventListener('click', () => {
+    window.print();
+  });
 }
 
 // 3. データの保存
@@ -848,4 +855,179 @@ function updateMonthDropdown() {
   // 選択されていた値を復元（なければ 'all'）
   const hasPrevValue = sortedMonths.includes(prevValue);
   selectMonth.value = hasPrevValue ? prevValue : 'all';
+}
+
+// 13. 医師提出用レポート（1枚シート）の制御
+function openReport() {
+  generateReport();
+  document.getElementById('report-modal').classList.add('show');
+}
+
+function closeReport() {
+  document.getElementById('report-modal').classList.remove('show');
+}
+
+function generateReport() {
+  const data = getStoredData();
+  const tableBody = document.getElementById('report-table-body');
+  if (!tableBody) return;
+  
+  tableBody.innerHTML = '';
+  
+  // 現在選択されている月を取得してフィルタリング
+  const selectMonth = document.getElementById('select-month');
+  const selectedMonthVal = selectMonth ? selectMonth.value : 'all';
+  const filteredData = selectedMonthVal === 'all' 
+    ? data 
+    : data.filter(item => item.date.startsWith(selectedMonthVal));
+    
+  // 期間ラベルの更新
+  const monthLabel = document.getElementById('report-month-label');
+  if (monthLabel) {
+    if (selectedMonthVal === 'all') {
+      monthLabel.textContent = '期間: すべての記録';
+    } else {
+      const parts = selectedMonthVal.split('-');
+      monthLabel.textContent = `期間: ${parts[0]}年${parseInt(parts[1])}月`;
+    }
+  }
+  
+  // 1. 日付ごとにデータをグループ化
+  // 形式: { "2026-07-06": { morning: item, evening: item } }
+  const grouped = {};
+  filteredData.forEach(item => {
+    const d = item.date; // "YYYY-MM-DD"
+    if (!grouped[d]) {
+      grouped[d] = { morning: null, evening: null };
+    }
+    if (item.period === 'morning') {
+      grouped[d].morning = item;
+    } else if (item.period === 'evening') {
+      grouped[d].evening = item;
+    }
+  });
+  
+  // 2. 日付を古い順（昇順）にソート
+  const sortedDates = Object.keys(grouped).sort();
+  
+  // 平均値算出用の変数
+  let sumSysMorning = 0, sumDiaMorning = 0, sumPulseMorning = 0, countMorning = 0;
+  let sumSysEvening = 0, sumDiaEvening = 0, sumPulseEvening = 0, countEvening = 0;
+  
+  // 3. 表の行を生成
+  if (sortedDates.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="4" style="padding: 24px; color: #64748b;">データがありません。上のフォームから記録してください。</td></tr>`;
+    
+    // サマリー表示をリセット
+    document.getElementById('report-avg-morning').innerHTML = `- / - <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-morning').textContent = '平均脈拍: -';
+    document.getElementById('report-avg-evening').innerHTML = `- / - <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-evening').textContent = '平均脈拍: -';
+    document.getElementById('report-total-days').innerHTML = `0 <span class="summary-unit">日</span>`;
+    return;
+  }
+  
+  sortedDates.forEach(dateStr => {
+    const day = grouped[dateStr];
+    const m = day.morning;
+    const e = day.evening;
+    
+    // 日付表示を "M月D日(曜日)" に整形
+    const dateObj = new Date(dateStr);
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+    const displayDate = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${dayOfWeek})`;
+    
+    // 朝のセル作成
+    let morningHtml = '-';
+    if (m) {
+      let sysClass = '';
+      if (m.systolic >= 135) sysClass = 'report-danger-text';
+      else if (m.systolic >= 125) sysClass = 'report-warning-text';
+      
+      let diaClass = '';
+      if (m.diastolic >= 85) diaClass = 'report-danger-text';
+      else if (m.diastolic >= 80) diaClass = 'report-warning-text';
+      
+      morningHtml = `<span class="${sysClass}">${m.systolic}</span>/<span class="${diaClass}">${m.diastolic}</span> <span style="font-size:13px; color:#64748b;">(${m.pulse})</span>`;
+      
+      // 平均用集計
+      sumSysMorning += m.systolic;
+      sumDiaMorning += m.diastolic;
+      sumPulseMorning += m.pulse;
+      countMorning++;
+    }
+    
+    // 夜のセル作成
+    let eveningHtml = '-';
+    if (e) {
+      let sysClass = '';
+      if (e.systolic >= 135) sysClass = 'report-danger-text';
+      else if (e.systolic >= 125) sysClass = 'report-warning-text';
+      
+      let diaClass = '';
+      if (e.diastolic >= 85) diaClass = 'report-danger-text';
+      else if (e.diastolic >= 80) diaClass = 'report-warning-text';
+      
+      eveningHtml = `<span class="${sysClass}">${e.systolic}</span>/<span class="${diaClass}">${e.diastolic}</span> <span style="font-size:13px; color:#64748b;">(${e.pulse})</span>`;
+      
+      // 平均用集計
+      sumSysEvening += e.systolic;
+      sumDiaEvening += e.diastolic;
+      sumPulseEvening += e.pulse;
+      countEvening++;
+    }
+    
+    // メモの結合
+    let memoText = '';
+    if (m && m.memo) memoText += `朝: ${escapeHtml(m.memo)}`;
+    if (e && e.memo) {
+      if (memoText) memoText += '<br>';
+      memoText += `夜: ${escapeHtml(e.memo)}`;
+    }
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${displayDate}</strong></td>
+      <td>${morningHtml}</td>
+      <td>${eveningHtml}</td>
+      <td style="text-align: left; max-width: 250px;">${memoText || '-'}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+  
+  // 4. 平均値と記録日数のサマリー更新
+  // 朝平均
+  if (countMorning > 0) {
+    const avgSys = Math.round(sumSysMorning / countMorning);
+    const avgDia = Math.round(sumDiaMorning / countMorning);
+    const avgPulse = Math.round(sumPulseMorning / countMorning);
+    
+    let sysClass = avgSys >= 135 ? 'report-danger-text' : (avgSys >= 125 ? 'report-warning-text' : '');
+    let diaClass = avgDia >= 85 ? 'report-danger-text' : (avgDia >= 80 ? 'report-warning-text' : '');
+    
+    document.getElementById('report-avg-morning').innerHTML = `<span class="${sysClass}">${avgSys}</span>/<span class="${diaClass}">${avgDia}</span> <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-morning').textContent = `平均脈拍: ${avgPulse} 拍/分`;
+  } else {
+    document.getElementById('report-avg-morning').innerHTML = `- / - <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-morning').textContent = '平均脈拍: -';
+  }
+  
+  // 夜平均
+  if (countEvening > 0) {
+    const avgSys = Math.round(sumSysEvening / countEvening);
+    const avgDia = Math.round(sumDiaEvening / countEvening);
+    const avgPulse = Math.round(sumPulseEvening / countEvening);
+    
+    let sysClass = avgSys >= 135 ? 'report-danger-text' : (avgSys >= 125 ? 'report-warning-text' : '');
+    let diaClass = avgDia >= 85 ? 'report-danger-text' : (avgDia >= 80 ? 'report-warning-text' : '');
+    
+    document.getElementById('report-avg-evening').innerHTML = `<span class="${sysClass}">${avgSys}</span>/<span class="${diaClass}">${avgDia}</span> <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-evening').textContent = `平均脈拍: ${avgPulse} 拍/分`;
+  } else {
+    document.getElementById('report-avg-evening').innerHTML = `- / - <span class="summary-unit">mmHg</span>`;
+    document.getElementById('report-pulse-evening').textContent = '平均脈拍: -';
+  }
+  
+  // 記録日数 (ユニークな測定日)
+  document.getElementById('report-total-days').innerHTML = `${sortedDates.length} <span class="summary-unit">日</span>`;
 }
