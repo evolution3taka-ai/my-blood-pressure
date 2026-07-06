@@ -131,6 +131,7 @@ function setupEventListeners() {
   document.getElementById('btn-print-report').addEventListener('click', () => {
     window.print();
   });
+  document.getElementById('btn-toggle-report-chart').addEventListener('click', toggleReportChart);
 }
 
 // 3. データの保存
@@ -867,6 +868,18 @@ function openReport() {
 
 function closeReport() {
   document.getElementById('report-modal').classList.remove('show');
+  
+  // レポート用グラフコンテナと表示ステートのリセット
+  const container = document.getElementById('report-chart-container');
+  if (container) container.style.display = 'none';
+  
+  const btn = document.getElementById('btn-toggle-report-chart');
+  if (btn) btn.textContent = '📈 グラフを表示する';
+  
+  if (reportChartInstance) {
+    reportChartInstance.destroy();
+    reportChartInstance = null;
+  }
 }
 
 function generateReport() {
@@ -1032,4 +1045,140 @@ function generateReport() {
   
   // 記録日数 (ユニークな測定日)
   document.getElementById('report-total-days').innerHTML = `${sortedDates.length} <span class="summary-unit">日</span>`;
+}
+
+// 14. レポート用グラフの制御と描画
+let reportChartInstance = null;
+function toggleReportChart() {
+  const container = document.getElementById('report-chart-container');
+  const btn = document.getElementById('btn-toggle-report-chart');
+  if (!container || !btn) return;
+  
+  const isHidden = container.style.display === 'none';
+  if (isHidden) {
+    container.style.display = 'block';
+    btn.textContent = '📉 グラフを隠す';
+    renderReportChart();
+  } else {
+    container.style.display = 'none';
+    btn.textContent = '📈 グラフを表示する';
+    if (reportChartInstance) {
+      reportChartInstance.destroy();
+      reportChartInstance = null;
+    }
+  }
+}
+
+function renderReportChart() {
+  const ctx = document.getElementById('reportBpChart').getContext('2d');
+  const data = getStoredData();
+  
+  // 現在選択されている月を取得してフィルタリング
+  const selectMonth = document.getElementById('select-month');
+  const selectedMonthVal = selectMonth ? selectMonth.value : 'all';
+  const filteredData = selectedMonthVal === 'all' 
+    ? data 
+    : data.filter(item => item.date.startsWith(selectedMonthVal));
+    
+  if (filteredData.length === 0) {
+    if (reportChartInstance) {
+      reportChartInstance.destroy();
+      reportChartInstance = null;
+    }
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.font = '16px Noto Sans JP';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('この月のデータはありません。', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    return;
+  }
+  
+  // レポート用にデータを古い順にする
+  // 31日分（最大）プロットする
+  const chartData = [...filteredData].reverse();
+  
+  const labels = chartData.map(item => {
+    const d = new Date(item.date);
+    const p = item.period === 'morning' ? '朝' : '夜';
+    return `${d.getMonth() + 1}/${d.getDate()}(${p})`;
+  });
+  
+  const systolicData = chartData.map(item => item.systolic);
+  const diastolicData = chartData.map(item => item.diastolic);
+  const pulseData = chartData.map(item => item.pulse);
+  
+  if (reportChartInstance) {
+    reportChartInstance.destroy();
+  }
+  
+  // メイングラフと同じく美しいテーマで作成
+  reportChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '最高血圧 (上)',
+          data: systolicData,
+          borderColor: '#ff4757',
+          backgroundColor: 'rgba(255, 71, 87, 0.05)',
+          borderWidth: 3,
+          tension: 0.25,
+          pointBackgroundColor: '#ff4757',
+          pointRadius: 4
+        },
+        {
+          label: '最低血圧 (下)',
+          data: diastolicData,
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.05)',
+          borderWidth: 3,
+          tension: 0.25,
+          pointBackgroundColor: '#2ecc71',
+          pointRadius: 4
+        },
+        {
+          label: '脈拍',
+          data: pulseData,
+          borderColor: '#4ea8de',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          tension: 0.25,
+          pointBackgroundColor: '#4ea8de',
+          pointRadius: 3,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: { size: 12, weight: 'bold' }
+          }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: '血圧 (mmHg)', font: { weight: 'bold' } },
+          min: 40,
+          max: 200,
+          ticks: { stepSize: 20 }
+        },
+        y1: {
+          title: { display: true, text: '脈拍 (拍/分)', font: { weight: 'bold' } },
+          position: 'right',
+          min: 40,
+          max: 120,
+          ticks: { stepSize: 20 },
+          grid: { drawOnChartArea: false } // 右目盛りのグリッド線は消す
+        }
+      }
+    }
+  });
 }

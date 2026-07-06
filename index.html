@@ -63,6 +63,16 @@
         </div>
       </div>
 
+      <!-- レポート用グラフ開閉ボタン -->
+      <button type="button" id="btn-toggle-report-chart" class="btn-toggle-report-chart">
+        📈 グラフを表示する
+      </button>
+
+      <!-- レポート用グラフ表示エリア -->
+      <div id="report-chart-container" class="report-chart-container" style="display: none;">
+        <canvas id="reportBpChart"></canvas>
+      </div>
+
       <!-- テーブル本体 -->
       <div class="report-table-wrapper">
         <table class="report-table">

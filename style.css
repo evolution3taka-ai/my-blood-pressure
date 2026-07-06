@@ -1244,4 +1244,45 @@ header h1, .app-header h1 {
     page-break-inside: avoid;
     page-break-after: auto;
   }
+  
+  /* 印刷時はグラフ表示切替ボタンは隠す */
+  .btn-toggle-report-chart {
+    display: none !important;
+  }
+}
+
+/* レポート用グラフ開閉ボタンとコンテナ */
+.btn-toggle-report-chart {
+  width: 100%;
+  height: 46px;
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(78, 168, 222, 0.15);
+  transition: var(--transition);
+}
+
+.btn-toggle-report-chart:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.report-chart-container {
+  width: 100%;
+  height: 280px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 24px;
+  box-sizing: border-box;
 }
