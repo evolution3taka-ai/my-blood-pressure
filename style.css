@@ -42,7 +42,7 @@
 
 body {
   font-family: var(--font-main);
-  background-color: var(--color-bg);
+  background: linear-gradient(135deg, #f0f4f8 0%, #e6eef4 100%);
   color: var(--color-text-main);
   line-height: 1.6;
   padding: 16px;
@@ -75,7 +75,7 @@ body {
 .btn-show-report-header {
   height: 42px;
   padding: 0 16px;
-  background-color: var(--color-secondary);
+  background: linear-gradient(to bottom, #5cb4e6, #3692c8);
   color: #ffffff;
   border: none;
   border-radius: 20px;
@@ -86,13 +86,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 4px 6px -1px rgba(78, 168, 222, 0.2);
+  box-shadow: 0 4px 8px rgba(78, 168, 222, 0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
   transition: var(--transition);
 }
 
 .btn-show-report-header:active {
-  transform: scale(0.95);
-  background-color: #3d97c9;
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+  background: #3692c8;
 }
 
 .header-title-container {
@@ -106,7 +108,7 @@ body {
   height: 44px;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 header h1, .app-header h1 {
@@ -118,16 +120,18 @@ header h1, .app-header h1 {
 
 /* 基本的なカードのスタイル */
 .card {
-  background-color: var(--color-card-bg);
+  background: #ffffff;
   border-radius: var(--radius-md);
   padding: 24px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 30px -5px rgba(50, 50, 93, 0.05), 
+              0 8px 16px -8px rgba(0, 0, 0, 0.03), 
+              inset 0 1px 0 #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
   transition: var(--transition);
 }
 
 .card:active {
-  transform: scale(0.99);
+  transform: translateY(1px);
 }
 
 .card-title {
@@ -238,27 +242,37 @@ header h1, .app-header h1 {
   height: 54px;
   font-size: 18px;
   font-weight: 700;
-  border: 2px solid #e0e6ed;
+  border: 2px solid #cbd5e1;
   border-radius: var(--radius-sm);
-  background-color: #ffffff;
+  background-color: #f8fafc;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  color: var(--color-text-muted);
   transition: var(--transition);
 }
 
+.ampm-btn:active {
+  transform: scale(0.98);
+}
+
 .ampm-btn.morning.active {
-  border-color: #f1c40f;
-  background-color: #fef9e7;
-  color: #b7950b;
+  background: linear-gradient(to bottom, #ff9eb0, #ff5c73);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 107, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
 .ampm-btn.evening.active {
-  border-color: #9b59b6;
-  background-color: #f4ecf7;
-  color: #6c3483;
+  background: linear-gradient(to bottom, #74bde8, #3a92c8);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(78, 168, 222, 0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
 /* メモ入力 */
@@ -274,8 +288,10 @@ header h1, .app-header h1 {
   height: 54px;
   font-size: 16px;
   padding: 12px;
-  border: 2px solid #e0e6ed;
+  border: 2px solid #cbd5e1;
   border-radius: var(--radius-sm);
+  background-color: #fcfdfe;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
   outline: none;
   resize: none;
   font-family: inherit;
@@ -284,6 +300,8 @@ header h1, .app-header h1 {
 
 .input-memo:focus {
   border-color: var(--color-secondary);
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(78, 168, 222, 0.15), inset 0 2px 4px rgba(0,0,0,0.03);
 }
 
 /* 大きくて押しやすい保存ボタン */
@@ -291,12 +309,13 @@ header h1, .app-header h1 {
   width: 100%;
   height: 64px;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), #ff4757);
+  background: linear-gradient(to bottom, #ff8da2, #ff4757);
   border: none;
   border-radius: var(--radius-md);
-  box-shadow: 0 6px 16px rgba(255, 107, 129, 0.3);
+  box-shadow: 0 8px 20px rgba(255, 71, 87, 0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -306,8 +325,8 @@ header h1, .app-header h1 {
 }
 
 .btn-submit:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 6px rgba(255, 107, 129, 0.2);
+  transform: translateY(2px) scale(0.99);
+  box-shadow: 0 2px 6px rgba(255, 71, 87, 0.15), inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* タブ切り替え（グラフと履歴の表示切り替え用） */
@@ -1287,257 +1306,102 @@ header h1, .app-header h1 {
   box-sizing: border-box;
 }
 
-/* アナログ時計時間ピッカーのスタイル */
-.clock-picker-group {
-  margin-top: 16px;
-  background-color: #f8fafc;
-  border-radius: var(--radius-md);
-  padding: 20px;
-  border: 1px dashed #cbd5e1;
-}
-
-.analog-clock-wrapper {
+/* 縦型上下ステッパーボタンのスタイル */
+.vertical-stepper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  margin-top: 10px;
-}
-
-/* デジタル表示 */
-.clock-digital-display {
-  display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--color-text-main);
-  background-color: #ffffff;
-  padding: 8px 24px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid #e2e8f0;
-}
-
-.clock-display-num {
-  font-family: monospace; /* 等幅にしてブレをなくす */
-  font-size: 32px;
-  color: var(--color-primary);
-}
-
-.clock-display-colon {
-  animation: clock-blink 1s infinite alternate;
-}
-
-@keyframes clock-blink {
-  0% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-/* モード切り替えボタン */
-.clock-mode-selector {
-  display: flex;
-  background-color: #e2e8f0;
-  border-radius: 20px;
-  padding: 4px;
-  width: 100%;
-  max-width: 260px;
-}
-
-.clock-mode-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: 14px;
-  font-weight: 700;
-  padding: 8px 12px;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.clock-mode-btn.active {
-  background-color: #ffffff;
-  color: var(--color-text-main);
-  box-shadow: var(--shadow-sm);
-}
-
-/* 文字盤SVGスタイル */
-.clock-face-container {
-  position: relative;
-  width: 185px;
-  height: 185px;
-  background: transparent;
-  touch-action: none; /* スマホのドラッグスクロールを無効化 */
-  user-select: none;
-}
-
-.clock-face-bg {
-  fill: #ffffff;
-  stroke: #e2e8f0;
-  stroke-width: 4;
-}
-
-.clock-face-inner {
-  fill: #ffffff;
-  stroke: #f1f5f9;
-  stroke-width: 2;
-}
-
-.clock-number {
-  font-size: 16px;
-  font-weight: 800;
-  fill: #64748b;
-  text-anchor: middle;
-  dominant-baseline: middle;
-  user-select: none;
-}
-
-.clock-hand {
-  stroke-linecap: round;
-  transform-origin: 100px 100px;
-  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-/* ドラッグ中はトランジションをなくして指に吸い付かせるクラス */
-.clock-hand.no-transition {
-  transition: none !important;
-}
-
-.hour-hand {
-  stroke: #ff4757;
-  stroke-width: 6;
-}
-
-.minute-hand {
-  stroke: #4ea8de;
-  stroke-width: 4;
-}
-
-.clock-knob {
-  cursor: pointer;
-  stroke: #ffffff;
-  stroke-width: 2;
-  transform-origin: 100px 100px;
-  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
-  filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.15));
-}
-
-.clock-knob.no-transition {
-  transition: none !important;
-}
-
-.hour-knob {
-  fill: #ff4757;
-}
-
-.minute-knob {
-  fill: #4ea8de;
-}
-
-.clock-center-pin {
-  fill: var(--color-text-main);
-}
-
-/* 縦並びステッパー入力UI */
-.form-group-steppers {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.stepper-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background-color: #ffffff;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid #e2e8f0;
-}
-
-.stepper-label {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--color-text-main);
-  text-align: left;
-  padding-left: 4px;
-}
-
-.stepper-control {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   width: 100%;
 }
 
-.stepper-btn {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 2px solid #cbd5e1;
-  background-color: #f8fafc;
-  font-size: 20px;
-  font-weight: 700;
+.v-stepper-btn {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+  font-size: 13px;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
+  transition: all 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 #ffffff;
+  color: #475569;
   user-select: none;
 }
 
-.stepper-btn:active {
-  transform: scale(0.9);
-  background-color: #cbd5e1;
+.v-stepper-btn:active {
+  transform: translateY(1px);
+  background: #e2e8f0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.btn-minus {
+.v-btn-plus {
+  color: var(--color-primary);
+}
+
+.v-btn-minus {
   color: var(--color-secondary);
 }
 
-.btn-plus {
-  color: var(--color-primary);
-}
-
-.stepper-input-container {
+.v-stepper-input-wrapper {
   position: relative;
-  flex: 1;
+  width: 100%;
+  height: 52px;
+  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fafbfc;
-  border: 3px solid #e0e6ed;
-  border-radius: var(--radius-sm);
-  height: 54px;
+  padding: 0 4px;
 }
 
-.input-bp-stepper {
-  width: 80px;
+.input-bp {
+  width: 100%;
   height: 100%;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   border: none;
   background: transparent;
   text-align: center;
-  outline: none;
   color: var(--color-text-main);
+  outline: none;
+  padding-right: 0;
   -moz-appearance: textfield;
 }
 
-.input-bp-stepper::-webkit-outer-spin-button,
-.input-bp-stepper::-webkit-inner-spin-button {
+.input-bp::-webkit-outer-spin-button,
+.input-bp::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.stepper-unit {
-  font-size: 13px;
+.v-stepper-unit {
+  font-size: 10px;
   font-weight: 700;
   color: var(--color-text-muted);
   position: absolute;
-  right: 14px;
+  bottom: 2px;
+  text-align: center;
+  width: 100%;
   pointer-events: none;
+}
+
+/* スマホ表示の列幅調整 */
+.stepper-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stepper-col label {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  text-align: center;
 }

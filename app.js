@@ -7,7 +7,6 @@ const STORAGE_KEY = 'bp_tracker_data';
 document.addEventListener('DOMContentLoaded', () => {
   initDateTime();
   setupEventListeners();
-  setupClockEvents();
   updateMonthDropdown();
   loadHistory();
   checkPwaGuide();
@@ -46,9 +45,6 @@ function initDateTime() {
   // 朝・夜の自動判別 (12:00 前なら朝、以降なら夜)
   const isMorning = now.getHours() < 12;
   setPeriod(isMorning ? 'morning' : 'evening');
-  
-  // アナログ時計の同期
-  syncAnalogClock();
 
   // 血圧・脈拍のデフォルト値を明示的にセット（古いHTMLキャッシュ対策）
   const sysInput = document.getElementById('bp-systolic');
@@ -75,21 +71,6 @@ function setPeriod(period) {
     btnMorning.dataset.active = 'false';
     btnEvening.dataset.active = 'true';
   }
-  
-  // 時間の朝夜（AM/PM）補正
-  const timeInput = document.getElementById('input-time');
-  if (timeInput && timeInput.value) {
-    let [h, m] = timeInput.value.split(':').map(Number);
-    if (period === 'morning' && h >= 12) {
-      h -= 12;
-    } else if (period === 'evening' && h < 12) {
-      h += 12;
-    }
-    timeInput.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  }
-  
-  // アナログ時計を同期
-  syncAnalogClock();
 }
 
 // 2. イベントリスナーの設定
@@ -373,179 +354,7 @@ window.deleteRecord = function(id) {
   }
 };
 
-// 15. アナログ時計時間ピッカーの制御
-let clockActiveMode = 'hour';
-let isDraggingClock = false;
 
-function setClockMode(mode) {
-  clockActiveMode = mode;
-  const btnHour = document.getElementById('btn-clock-mode-hour');
-  const btnMinute = document.getElementById('btn-clock-mode-minute');
-  if (!btnHour || !btnMinute) return;
-
-  if (mode === 'hour') {
-    btnHour.classList.add('active');
-    btnMinute.classList.remove('active');
-  } else {
-    btnHour.classList.remove('active');
-    btnMinute.classList.add('active');
-  }
-}
-
-// 裏の time 入力値からアナログ時計の針の角度とデジタル表示を同期
-function syncAnalogClock() {
-  const timeInput = document.getElementById('input-time');
-  if (!timeInput || !timeInput.value) return;
-
-  let [h, m] = timeInput.value.split(':').map(Number);
-  
-  // デジタル表示を更新
-  const dispHour = document.getElementById('clock-display-hour');
-  const dispMin = document.getElementById('clock-display-minute');
-  if (dispHour) dispHour.textContent = String(h).padStart(2, '0');
-  if (dispMin) dispMin.textContent = String(m).padStart(2, '0');
-
-  // アナログ時計の針を回転 (12時間制で角度を求める)
-  const hourDeg = ((h % 12) * 30) + (m * 0.5);
-  const minDeg = m * 6;
-
-  const hHand = document.getElementById('clock-hour-hand');
-  const hKnob = document.getElementById('clock-hour-knob');
-  const mHand = document.getElementById('clock-minute-hand');
-  const mKnob = document.getElementById('clock-minute-knob');
-
-  if (hHand) hHand.style.transform = `rotate(${hourDeg}deg)`;
-  if (hKnob) hKnob.style.transform = `rotate(${hourDeg}deg)`;
-  if (mHand) mHand.style.transform = `rotate(${minDeg}deg)`;
-  if (mKnob) mKnob.style.transform = `rotate(${minDeg}deg)`;
-}
-
-// 時計のタッチ・ドラッグ・クリックイベント
-function setupClockEvents() {
-  const container = document.getElementById('clock-face-container');
-  if (!container) return;
-
-  // モード切り替えボタンのバインド
-  const btnHour = document.getElementById('btn-clock-mode-hour');
-  const btnMinute = document.getElementById('btn-clock-mode-minute');
-  if (btnHour) btnHour.addEventListener('click', () => setClockMode('hour'));
-  if (btnMinute) btnMinute.addEventListener('click', () => setClockMode('minute'));
-
-  // マウスイベント
-  container.addEventListener('mousedown', (e) => {
-    isDraggingClock = true;
-    toggleClockTransition(false); // アニメーションを一時オフにして指に吸い付かせる
-    handleClockInteraction(e);
-  });
-  
-  window.addEventListener('mousemove', (e) => {
-    if (isDraggingClock) {
-      handleClockInteraction(e);
-    }
-  });
-
-  window.addEventListener('mouseup', () => {
-    if (isDraggingClock) {
-      isDraggingClock = false;
-      toggleClockTransition(true); // アニメーションをオンに戻す
-    }
-  });
-
-  // タッチイベント (スマホ用)
-  container.addEventListener('touchstart', (e) => {
-    isDraggingClock = true;
-    toggleClockTransition(false);
-    handleClockInteraction(e.touches[0]);
-    e.preventDefault(); // スクロール防止
-  }, { passive: false });
-
-  window.addEventListener('touchmove', (e) => {
-    if (isDraggingClock) {
-      handleClockInteraction(e.touches[0]);
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  window.addEventListener('touchend', () => {
-    if (isDraggingClock) {
-      isDraggingClock = false;
-      toggleClockTransition(true);
-    }
-  });
-}
-
-// 針のアニメーション切り替え
-function toggleClockTransition(enable) {
-  const elements = [
-    document.getElementById('clock-hour-hand'),
-    document.getElementById('clock-hour-knob'),
-    document.getElementById('clock-minute-hand'),
-    document.getElementById('clock-minute-knob')
-  ];
-  elements.forEach(el => {
-    if (el) {
-      if (enable) {
-        el.classList.remove('no-transition');
-      } else {
-        el.classList.add('no-transition');
-      }
-    }
-  });
-}
-
-// 角度計算と時間更新処理
-function handleClockInteraction(e) {
-  const container = document.getElementById('clock-face-container');
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  // コンテナの中心座標
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-
-  // 中心からのタッチ相対座標
-  const dx = e.clientX - centerX;
-  const dy = e.clientY - centerY;
-
-  // 角度 (ラジアン) を求める
-  let theta = Math.atan2(dy, dx);
-  // 度数に変換 (12時を0度とするため +90度)
-  let angleDeg = theta * (180 / Math.PI) + 90;
-  if (angleDeg < 0) {
-    angleDeg = 360 + angleDeg;
-  }
-
-  // 朝・夜（AM/PM）の状態を取得
-  const btnEvening = document.getElementById('btn-evening');
-  const isPM = btnEvening && btnEvening.classList.contains('active');
-
-  const timeInput = document.getElementById('input-time');
-  if (!timeInput) return;
-  let [currentH, currentM] = timeInput.value.split(':').map(Number);
-
-  if (clockActiveMode === 'hour') {
-    // 30度で1時間
-    let hour = Math.round(angleDeg / 30);
-    if (hour === 0) hour = 12; // 0時は12時
-    
-    // PMなら +12時間
-    if (isPM) {
-      if (hour < 12) hour += 12;
-    } else {
-      if (hour === 12) hour = 0; // 朝の12時は0時
-    }
-    currentH = hour;
-  } else {
-    // 6度で1分
-    let minute = Math.round(angleDeg / 6);
-    if (minute === 60) minute = 0;
-    currentM = minute;
-  }
-
-  // 裏の time 入力欄とデジタル表示を更新
-  timeInput.value = `${String(currentH).padStart(2, '0')}:${String(currentM).padStart(2, '0')}`;
-  syncAnalogClock();
-}
 
 // 6. トースト通知表示
 function showToast() {

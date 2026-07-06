@@ -138,96 +138,54 @@
       <!-- 日付・時間 -->
       <div class="datetime-row">
         <div class="form-group flex-2">
-          <label class="ampm-switch-label">測定した日付</label>
+          <label for="input-date" class="ampm-switch-label">測定した日付</label>
           <input type="date" id="input-date" class="input-date" required>
         </div>
-        <input type="time" id="input-time" style="display: none;" required>
-      </div>
-
-      <!-- アナログ時計時間ピッカー -->
-      <div class="form-group clock-picker-group">
-        <label class="ampm-switch-label">測定した時間を合わせる</label>
-        <div class="analog-clock-wrapper">
-          <!-- デジタル連動表示 -->
-          <div class="clock-digital-display">
-            <span id="clock-display-hour" class="clock-display-num">08</span>
-            <span class="clock-display-colon">:</span>
-            <span id="clock-display-minute" class="clock-display-num">30</span>
-          </div>
-          
-          <!-- 操作モード切り替え -->
-          <div class="clock-mode-selector">
-            <button type="button" id="btn-clock-mode-hour" class="clock-mode-btn active">時を合わせる</button>
-            <button type="button" id="btn-clock-mode-minute" class="clock-mode-btn">分を合わせる</button>
-          </div>
-
-          <!-- アナログ時計本体（SVG） -->
-          <div class="clock-face-container" id="clock-face-container">
-            <svg id="analog-clock-svg" viewBox="0 0 200 200" width="185" height="185">
-              <!-- 文字盤 -->
-              <circle cx="100" cy="100" r="92" class="clock-face-bg"/>
-              <circle cx="100" cy="100" r="82" class="clock-face-inner"/>
-              
-              <!-- 文字盤の数字 -->
-              <text x="100" y="34" class="clock-number">12</text>
-              <text x="168" y="106" class="clock-number">3</text>
-              <text x="100" y="176" class="clock-number">6</text>
-              <text x="32" y="106" class="clock-number">9</text>
-              
-              <!-- 短針 (時) -->
-              <line id="clock-hour-hand" x1="100" y1="100" x2="100" y2="62" class="clock-hand hour-hand"/>
-              <circle id="clock-hour-knob" cx="100" cy="62" r="11" class="clock-knob hour-knob"/>
-
-              <!-- 長針 (分) -->
-              <line id="clock-minute-hand" x1="100" y1="100" x2="100" y2="44" class="clock-hand minute-hand"/>
-              <circle id="clock-minute-knob" cx="100" cy="44" r="10" class="clock-knob minute-knob"/>
-
-              <!-- センターピン -->
-              <circle cx="100" cy="100" r="5" class="clock-center-pin"/>
-            </svg>
-          </div>
+        <div class="form-group flex-1">
+          <label for="input-time" class="ampm-switch-label">時間</label>
+          <input type="time" id="input-time" class="input-time" required>
         </div>
       </div>
 
-      <!-- 血圧・脈拍の入力欄（縦に3段並べて巨大で押しやすいステッパーにする） -->
-      <div class="form-group-steppers">
+      <!-- 血圧・脈拍の入力欄（横並び3連 ＋ 縦型上下ステッパーボタン） -->
+      <div class="form-group-row">
         
         <!-- 最高血圧 (上) -->
-        <div class="stepper-row">
-          <label for="bp-systolic" class="stepper-label">最高血圧 (上)</label>
-          <div class="stepper-control">
-            <button type="button" class="stepper-btn btn-minus" onclick="stepValue('bp-systolic', -1)">➖</button>
-            <div class="stepper-input-container">
-              <input type="number" id="bp-systolic" class="input-bp-stepper" inputmode="numeric" value="120" min="40" max="250" required>
-              <span class="stepper-unit">mmHg</span>
+        <div class="form-group stepper-col">
+          <label for="bp-systolic">最高（上）</label>
+          <div class="vertical-stepper">
+            <button type="button" class="v-stepper-btn v-btn-plus" onclick="stepValue('bp-systolic', 1)">▲</button>
+            <div class="v-stepper-input-wrapper">
+              <input type="number" id="bp-systolic" class="input-bp" inputmode="numeric" value="120" min="40" max="250" required>
+              <span class="v-stepper-unit">mmHg</span>
             </div>
-            <button type="button" class="stepper-btn btn-plus" onclick="stepValue('bp-systolic', 1)">➕</button>
+            <button type="button" class="v-stepper-btn v-btn-minus" onclick="stepValue('bp-systolic', -1)">▼</button>
           </div>
         </div>
 
         <!-- 最低血圧 (下) -->
-        <div class="stepper-row">
-          <label for="bp-diastolic" class="stepper-label">最低血圧 (下)</label>
-          <div class="stepper-control">
-            <button type="button" class="stepper-btn btn-minus" onclick="stepValue('bp-diastolic', -1)">➖</button>
-            <div class="stepper-input-container">
-              <input type="number" id="bp-diastolic" class="input-bp-stepper" inputmode="numeric" value="70" min="30" max="180" required>
-              <span class="stepper-unit">mmHg</span>
+        <div class="form-group stepper-col">
+          <label for="bp-diastolic">最低（下）</label>
+          <div class="vertical-stepper">
+            <button type="button" class="v-stepper-btn v-btn-plus" onclick="stepValue('bp-diastolic', 1)">▲</button>
+            <div class="v-stepper-input-wrapper">
+              <input type="number" id="bp-diastolic" class="input-bp" inputmode="numeric" value="70" min="30" max="180" required>
+              <span class="v-stepper-unit">mmHg</span>
             </div>
-            <button type="button" class="stepper-btn btn-plus" onclick="stepValue('bp-diastolic', 1)">➕</button>
+            <button type="button" class="v-stepper-btn v-btn-minus" onclick="stepValue('bp-diastolic', -1)">▼</button>
           </div>
         </div>
 
         <!-- 脈拍 -->
-        <div class="stepper-row">
-          <label for="pulse" class="stepper-label">脈拍 (心拍数)</label>
-          <div class="stepper-control">
-            <button type="button" class="stepper-btn btn-minus" onclick="stepValue('pulse', -1)">➖</button>
-            <div class="stepper-input-container">
-              <input type="number" id="pulse" class="input-bp-stepper" inputmode="numeric" value="60" min="30" max="200" required>
-              <span class="stepper-unit">拍/分</span>
+        <div class="form-group stepper-col">
+          <label for="pulse">脈拍</label>
+          <div class="vertical-stepper">
+            <button type="button" class="v-stepper-btn v-btn-plus" onclick="stepValue('pulse', 1)">▲</button>
+            <div class="v-stepper-input-wrapper">
+              <input type="number" id="pulse" class="input-bp" inputmode="numeric" value="60" min="30" max="200" required>
+              <span class="v-stepper-unit">拍/分</span>
             </div>
-            <button type="button" class="stepper-btn btn-plus" onclick="stepValue('pulse', 1)">➕</button>
+            <button type="button" class="v-stepper-btn v-btn-minus" onclick="stepValue('pulse', -1)">▼</button>
           </div>
         </div>
 
