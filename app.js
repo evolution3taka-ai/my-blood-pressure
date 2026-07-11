@@ -7,8 +7,6 @@ const STORAGE_KEY = 'bp_tracker_data';
 document.addEventListener('DOMContentLoaded', () => {
   initDateTime();
   setupEventListeners();
-  initPrefecture(); // 都道府県設定の初期設定
-  fetchWeather();   // 今日の天気・気温の自動取得
   updateMonthDropdown();
   loadHistory();
   checkPwaGuide();
@@ -135,19 +133,13 @@ function setupEventListeners() {
     }
   });
 
-  document.getElementById('btn-toggle-report-chart').addEventListener('click', toggleReportChart);
-
-  // 都道府県選択の変更イベント
-  document.getElementById('select-prefecture').addEventListener('change', (e) => {
-    localStorage.setItem('bp_prefecture', e.target.value);
-    fetchWeather(); // 天気と気温を再取得
+  // レポート（医師提出用）イベント
+  document.getElementById('btn-show-report').addEventListener('click', openReport);
+  document.getElementById('btn-close-report').addEventListener('click', closeReport);
+  document.getElementById('btn-print-report').addEventListener('click', () => {
+    window.print();
   });
-
-  // お天気スタンプのクリックイベント
-  document.getElementById('btn-weather-sunny').addEventListener('click', () => setWeather('sunny'));
-  document.getElementById('btn-weather-cloudy').addEventListener('click', () => setWeather('cloudy'));
-  document.getElementById('btn-weather-rainy').addEventListener('click', () => setWeather('rainy'));
-  document.getElementById('btn-weather-snowy').addEventListener('click', () => setWeather('snowy'));
+  document.getElementById('btn-toggle-report-chart').addEventListener('click', toggleReportChart);
 }
 
 // 3. データの保存
@@ -158,8 +150,6 @@ function saveData() {
   const memoInput = document.getElementById('memo');
   const dateInput = document.getElementById('input-date');
   const timeInput = document.getElementById('input-time');
-  const weatherInput = document.getElementById('input-weather');
-  const tempInput = document.getElementById('input-temp');
   
   const systolic = parseInt(systolicInput.value);
   const diastolic = parseInt(diastolicInput.value);
@@ -168,8 +158,6 @@ function saveData() {
   const date = dateInput.value;
   const time = timeInput.value;
   const period = document.getElementById('btn-morning').dataset.active === 'true' ? 'morning' : 'evening';
-  const weather = weatherInput ? weatherInput.value : 'sunny';
-  const temp = tempInput ? tempInput.value : '';
   
   // 簡単なバリデーション（空チェックと数値範囲）
   if (isNaN(systolic) || isNaN(diastolic) || isNaN(pulse)) {
@@ -190,9 +178,7 @@ function saveData() {
     systolic,
     diastolic,
     pulse,
-    memo,
-    weather,
-    temp
+    memo
   };
   
   // データの読み込みと追加
@@ -221,9 +207,6 @@ function saveData() {
   
   // 日時をその瞬間に更新
   initDateTime();
-  
-  // 天気を再自動取得
-  fetchWeather();
   
   // 記録完了のポップアップ（ラテ先生とキラキラ）を表示
   showSuccessModal();
@@ -328,7 +311,6 @@ function loadHistory() {
       </div>
       <div class="history-item-footer-container">
         <div class="history-item-memo-box">
-          ${item.weather ? `<div class="history-weather-line" style="font-size: 13px; margin-bottom: 4px; font-weight: bold; color: var(--color-text-muted);">${getWeatherIcon(item.weather)}${item.temp !== undefined && item.temp !== '' ? ` ${item.temp}℃` : ''}</div>` : ''}
           ${item.memo ? `<strong>メモ:</strong> ${escapeHtml(item.memo)}` : ''}
         </div>
         <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️ 消す</button>
@@ -1020,40 +1002,12 @@ function generateReport() {
       countEvening++;
     }
     
-    // メモの結合 (天気情報もさりげなく挿入)
+    // メモの結合
     let memoText = '';
-    
-    // 朝の天気
-    let mWeatherText = '';
-    if (m && m.weather) {
-      const wIcon = getWeatherIcon(m.weather);
-      const tText = m.temp !== undefined && m.temp !== '' ? `${m.temp}℃` : '';
-      mWeatherText = `<span style="font-size: 13px;">${wIcon} ${tText}</span>`;
-    }
-    
-    // 夜の天気
-    let eWeatherText = '';
-    if (e && e.weather) {
-      const wIcon = getWeatherIcon(e.weather);
-      const tText = e.temp !== undefined && e.temp !== '' ? `${e.temp}℃` : '';
-      eWeatherText = `<span style="font-size: 13px;">${wIcon} ${tText}</span>`;
-    }
-
-    if (m) {
-      const mMemo = m.memo ? escapeHtml(m.memo) : '';
-      const wText = mWeatherText ? `${mWeatherText}` : '';
-      if (wText || mMemo) {
-        memoText += `朝: ${wText}${wText && mMemo ? ' | ' : ''}${mMemo}`;
-      }
-    }
-    
-    if (e) {
-      const eMemo = e.memo ? escapeHtml(e.memo) : '';
-      const wText = eWeatherText ? `${eWeatherText}` : '';
-      if (wText || eMemo) {
-        if (memoText) memoText += '<br>';
-        memoText += `夜: ${wText}${wText && eMemo ? ' | ' : ''}${eMemo}`;
-      }
+    if (m && m.memo) memoText += `朝: ${escapeHtml(m.memo)}`;
+    if (e && e.memo) {
+      if (memoText) memoText += '<br>';
+      memoText += `夜: ${escapeHtml(e.memo)}`;
     }
     
     const tr = document.createElement('tr');
@@ -1262,161 +1216,3 @@ window.stepValue = function(id, diff) {
   
   input.value = val;
 };
-
-// 17. 天気・気温の自動取得と制御
-// 都道府県ごとの代表緯度経度
-const PREFECTURE_COORDINATES = {
-  tokyo: { lat: 35.6895, lon: 139.6917, name: '東京都' },
-  hokkaido: { lat: 43.0641, lon: 141.3469, name: '北海道' },
-  aomori: { lat: 40.8244, lon: 140.7472, name: '青森県' },
-  iwate: { lat: 39.7036, lon: 141.1527, name: '岩手県' },
-  miyagi: { lat: 38.2688, lon: 140.8721, name: '宮城県' },
-  akita: { lat: 39.7186, lon: 140.1024, name: '秋田県' },
-  yamagata: { lat: 38.2404, lon: 140.3633, name: '山形県' },
-  fukushima: { lat: 37.7503, lon: 140.4675, name: '福島県' },
-  ibaraki: { lat: 36.3418, lon: 140.4468, name: '茨城県' },
-  tochigi: { lat: 36.5658, lon: 139.8836, name: '栃木県' },
-  gunma: { lat: 36.3907, lon: 139.0608, name: '群馬県' },
-  saitama: { lat: 35.8570, lon: 139.6489, name: '埼玉県' },
-  chiba: { lat: 35.6046, lon: 140.1232, name: '千葉県' },
-  kanagawa: { lat: 35.4475, lon: 139.6423, name: '神奈川県' },
-  niigata: { lat: 37.9022, lon: 139.0236, name: '新潟県' },
-  toyama: { lat: 36.6953, lon: 137.2113, name: '富山県' },
-  ishikawa: { lat: 36.5947, lon: 136.6256, name: '石川県' },
-  fukui: { lat: 36.0652, lon: 136.2219, name: '福井県' },
-  yamanashi: { lat: 35.6639, lon: 138.5683, name: '山梨県' },
-  nagano: { lat: 36.6513, lon: 138.1810, name: '長野県' },
-  gifu: { lat: 35.4233, lon: 136.7607, name: '岐阜県' },
-  shizuoka: { lat: 34.9770, lon: 138.3831, name: '静岡県' },
-  aichi: { lat: 35.1802, lon: 136.9066, name: '愛知県' },
-  mie: { lat: 34.7303, lon: 136.5086, name: '三重県' },
-  shiga: { lat: 35.0045, lon: 135.8686, name: '滋賀県' },
-  kyoto: { lat: 35.0210, lon: 135.7556, name: '京都府' },
-  osaka: { lat: 34.6863, lon: 135.5200, name: '大阪府' },
-  hyogo: { lat: 34.6913, lon: 135.1830, name: '兵庫県' },
-  nara: { lat: 34.6853, lon: 135.8327, name: '奈良県' },
-  wakayama: { lat: 34.2260, lon: 135.1675, name: '和歌山県' },
-  tottori: { lat: 35.5036, lon: 134.2377, name: '鳥取県' },
-  shimane: { lat: 35.4722, lon: 133.0505, name: '島根県' },
-  okayama: { lat: 34.6618, lon: 133.9344, name: '岡山県' },
-  hiroshima: { lat: 34.3966, lon: 132.4596, name: '広島県' },
-  yamaguchi: { lat: 34.1860, lon: 131.4705, name: '山口県' },
-  tokushima: { lat: 34.0657, lon: 134.5594, name: '徳島県' },
-  kagawa: { lat: 34.3402, lon: 134.0434, name: '香川県' },
-  ehime: { lat: 33.8416, lon: 132.7657, name: '愛媛県' },
-  kochi: { lat: 33.5597, lon: 133.5311, name: '高知県' },
-  fukuoka: { lat: 33.6064, lon: 130.4182, name: '福岡県' },
-  saga: { lat: 33.2494, lon: 130.2998, name: '佐賀県' },
-  nagasaki: { lat: 32.7448, lon: 129.8736, name: '長崎県' },
-  kumamoto: { lat: 32.7898, lon: 130.7417, name: '熊本県' },
-  oita: { lat: 33.2382, lon: 131.6126, name: '大分県' },
-  miyazaki: { lat: 31.9111, lon: 131.4239, name: '宮崎県' },
-  kagoshima: { lat: 31.5602, lon: 130.5581, name: '鹿児島県' },
-  okinawa: { lat: 26.2124, lon: 127.6809, name: '沖縄県' }
-};
-
-// 設定された都道府県を初期読み込み
-function initPrefecture() {
-  const savedPref = localStorage.getItem('bp_prefecture') || 'tokyo';
-  const selectPref = document.getElementById('select-prefecture');
-  if (selectPref) {
-    selectPref.value = savedPref;
-  }
-}
-
-// 無料の気象API (Open-Meteo) から現在の天気と気温を非同期取得
-async function fetchWeather() {
-  const display = document.getElementById('weather-current-display');
-  if (!display) return;
-  
-  display.textContent = '自動取得中... ⏳';
-  
-  const savedPref = localStorage.getItem('bp_prefecture') || 'tokyo';
-  const coord = PREFECTURE_COORDINATES[savedPref];
-  if (!coord) {
-    display.textContent = '地域が未設定です 📍';
-    setWeather('sunny');
-    return;
-  }
-  
-  try {
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.lon}&current_weather=true&timezone=Asia%2FTokyo`);
-    if (!response.ok) throw new Error('APIエラー');
-    const data = await response.json();
-    
-    if (data && data.current_weather) {
-      const code = data.current_weather.weathercode;
-      const temp = Math.round(data.current_weather.temperature);
-      
-      // 天気コードをアプリ用の簡略マークにマッピング
-      let weatherCode = 'sunny';
-      if (code === 0) weatherCode = 'sunny';
-      else if (code >= 1 && code <= 3) weatherCode = 'cloudy';
-      else if (code >= 45 && code <= 48) weatherCode = 'cloudy';
-      else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) weatherCode = 'rainy';
-      else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) weatherCode = 'snowy';
-      
-      // 隠しフィールドを更新
-      document.getElementById('input-weather').value = weatherCode;
-      document.getElementById('input-temp').value = temp;
-      
-      // 画面表示更新
-      const wIcon = getWeatherIcon(weatherCode);
-      display.textContent = `${coord.name}の天気: ${wIcon} ${temp}℃ (自動取得)`;
-      
-      // スタンプボタンのアクティブクラスの同期
-      updateWeatherStampsActive(weatherCode);
-    } else {
-      throw new Error('データ取得失敗');
-    }
-  } catch (err) {
-    console.error('天気自動取得エラー:', err);
-    display.textContent = `${coord.name}の天気情報を取得できませんでした。下から選んでね 🐾`;
-    
-    // デフォルトで晴れを選択状態にする
-    document.getElementById('input-weather').value = 'sunny';
-    document.getElementById('input-temp').value = '';
-    updateWeatherStampsActive('sunny');
-  }
-}
-
-// 天気スタンプの手動切り替え
-function setWeather(code) {
-  const weatherInput = document.getElementById('input-weather');
-  if (weatherInput) weatherInput.value = code;
-  
-  const display = document.getElementById('weather-current-display');
-  const tempInput = document.getElementById('input-temp');
-  const currentTemp = tempInput ? tempInput.value : '';
-  const tempStr = currentTemp !== '' ? ` (${currentTemp}℃)` : '';
-  
-  if (display) {
-    const wIcon = getWeatherIcon(code);
-    display.textContent = `手動で選択中: ${wIcon}${tempStr}`;
-  }
-  
-  updateWeatherStampsActive(code);
-}
-
-// 天気スタンプのアクティブ表示切替
-function updateWeatherStampsActive(activeCode) {
-  const codes = ['sunny', 'cloudy', 'rainy', 'snowy'];
-  codes.forEach(c => {
-    const btn = document.getElementById(`btn-weather-${c}`);
-    if (btn) {
-      btn.className = 'weather-stamp-btn'; // クラスリセット
-      if (c === activeCode) {
-        btn.classList.add(`active-${c}`);
-      }
-    }
-  });
-}
-
-// お天気コードを対応する絵文字アイコンに変換するヘルパー
-function getWeatherIcon(code) {
-  if (code === 'sunny') return '☀️';
-  if (code === 'cloudy') return '☁️';
-  if (code === 'rainy') return '☔';
-  if (code === 'snowy') return '⛄';
-  return '☀️';
-}
