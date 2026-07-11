@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bp-tracker-v20';
+const CACHE_NAME = 'bp-tracker-v21';
 const ASSETS = [
   'index.html',
   'style.css',
@@ -35,9 +35,21 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// リクエスト時のキャッシュ応答 (Cache-First 戦略)
+// リクエスト時のキャッシュ応答 (Cache-First 戦略、ただし気象APIは除外)
 self.addEventListener('fetch', (event) => {
-  // Chart.js などの外部CDNがある場合はキャッシュを考慮
+  // お天気APIなどのリアルタイムAPIリクエストはキャッシュしない（常にネットワークから取得）
+  if (event.request.url.includes('api.open-meteo.com')) {
+    event.respondWith(
+      fetch(event.request).catch((err) => {
+        console.error('Weather API fetch failed:', err);
+        return new Response(JSON.stringify({ error: 'offline' }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -55,7 +67,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       }).catch(() => {
         // オフラインでアセットが見つからない場合
-        // ここでは単にエラーにするか、キャッシュにある index.html を返す
         if (event.request.mode === 'navigate') {
           return caches.match('index.html');
         }

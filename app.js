@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initDateTime();
   setupEventListeners();
   fetchKaneyamaWeather(); // 会津若松市金川町の天気を自動取得
+  
+  // 開きっぱなし対策：30分ごとに裏側で天気を自動再取得して更新する
+  setInterval(fetchKaneyamaWeather, 30 * 60 * 1000);
+
   updateMonthDropdown();
   loadHistory();
   checkPwaGuide();
