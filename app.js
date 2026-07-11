@@ -925,7 +925,7 @@ function generateReport() {
   const monthLabel = document.getElementById('report-month-label');
   if (monthLabel) {
     if (selectedMonthVal === 'all') {
-      monthLabel.textContent = '期間: すべての記録';
+      monthLabel.textContent = '';
     } else {
       const parts = selectedMonthVal.split('-');
       monthLabel.textContent = `期間: ${parts[0]}年${parseInt(parts[1])}月`;

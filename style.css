@@ -239,20 +239,34 @@ header h1, .app-header h1 {
 }
 
 .ampm-btn {
-  height: 54px;
-  font-size: 18px;
+  height: 64px;
+  font-size: 16px;
   font-weight: 700;
   border: 2px solid #cbd5e1;
   border-radius: var(--radius-sm);
   background-color: #f8fafc;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 2px;
+  line-height: 1.3;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
   color: var(--color-text-muted);
   transition: var(--transition);
+}
+
+.ampm-subtext {
+  font-size: 11px;
+  font-weight: normal;
+  color: #64748b;
+  display: inline-block;
+  margin-top: 1px;
+}
+
+.ampm-btn.active .ampm-subtext {
+  color: inherit;
 }
 
 .ampm-btn:active {
@@ -1077,31 +1091,44 @@ header h1, .app-header h1 {
 .report-paper {
   background-color: #ffffff;
   margin: 20px auto;
-  padding: 32px 24px;
+  padding: 40px 32px;
   width: 95%;
-  max-width: 800px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  max-width: 850px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   color: #0f172a;
 }
 
 .report-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   text-align: center;
-  margin-bottom: 20px;
-  color: #0f172a;
-  border-bottom: 3px double #cbd5e1;
-  padding-bottom: 12px;
+  margin-bottom: 24px;
+  color: #1e293b;
+  border-bottom: 4px double #1e293b;
+  padding-bottom: 14px;
+  line-height: 1.4;
+}
+
+.report-subtitle {
+  font-size: 15px;
+  font-weight: bold;
+  color: #64748b;
+  display: block;
+  margin-top: 4px;
 }
 
 .report-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 16px;
+  align-items: flex-end;
+  font-size: 15px;
   font-weight: 700;
-  margin-bottom: 24px;
-  color: #475569;
+  margin-bottom: 20px;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
 }
 
 /* 医師向けサマリーエリア */

@@ -39,10 +39,10 @@
       <button type="button" id="btn-print-report" class="btn-print-report">🖨️ 紙に印刷する / PDF保存</button>
     </div>
     <div class="report-paper">
-      <h1 class="report-title">血圧記録レポート (お医者さん提出用)</h1>
+      <h1 class="report-title">血圧記録レポート<br><span class="report-subtitle">(お医者さん提出用)</span></h1>
       <div class="report-meta">
-        <span id="report-month-label">期間: すべての月</span>
-        <span id="report-name-label">お名前: __________________</span>
+        <span id="report-month-label"></span>
+        <span id="report-name-label" style="border-bottom: 1.5px solid #1e293b; padding-bottom: 2px; min-width: 180px; text-align: left; display: inline-block;">お名前：大森 寿子 様</span>
       </div>
       
       <!-- 医師向けのサマリー集計値 -->
@@ -128,10 +128,10 @@
         <span class="ampm-switch-label">測定する時間帯</span>
         <div class="ampm-options">
           <button type="button" id="btn-morning" class="ampm-btn morning active">
-            <span>☀️</span> 朝 (起きてすぐ)
+            <span>☀️</span> 朝<br><span class="ampm-subtext">(起きてすぐ)</span>
           </button>
           <button type="button" id="btn-evening" class="ampm-btn evening">
-            <span>🌙</span> 夜 (寝る前など)
+            <span>🌙</span> 夜<br><span class="ampm-subtext">(寝る前など)</span>
           </button>
         </div>
       </div>
