@@ -7,6 +7,7 @@ const STORAGE_KEY = 'bp_tracker_data';
 document.addEventListener('DOMContentLoaded', () => {
   initDateTime();
   setupEventListeners();
+  fetchKaneyamaWeather(); // 会津若松市金川町の天気を自動取得
   updateMonthDropdown();
   loadHistory();
   checkPwaGuide();
@@ -150,6 +151,8 @@ function saveData() {
   const memoInput = document.getElementById('memo');
   const dateInput = document.getElementById('input-date');
   const timeInput = document.getElementById('input-time');
+  const weatherInput = document.getElementById('input-weather');
+  const tempInput = document.getElementById('input-temp');
   
   const systolic = parseInt(systolicInput.value);
   const diastolic = parseInt(diastolicInput.value);
@@ -158,6 +161,8 @@ function saveData() {
   const date = dateInput.value;
   const time = timeInput.value;
   const period = document.getElementById('btn-morning').dataset.active === 'true' ? 'morning' : 'evening';
+  const weather = weatherInput ? weatherInput.value : 'sunny';
+  const temp = tempInput ? tempInput.value : '';
   
   // 簡単なバリデーション（空チェックと数値範囲）
   if (isNaN(systolic) || isNaN(diastolic) || isNaN(pulse)) {
@@ -178,7 +183,9 @@ function saveData() {
     systolic,
     diastolic,
     pulse,
-    memo
+    memo,
+    weather,
+    temp
   };
   
   // データの読み込みと追加
@@ -207,6 +214,9 @@ function saveData() {
   
   // 日時をその瞬間に更新
   initDateTime();
+  
+  // 天気を再自動取得
+  fetchKaneyamaWeather();
   
   // 記録完了のポップアップ（ラテ先生とキラキラ）を表示
   showSuccessModal();
@@ -311,6 +321,7 @@ function loadHistory() {
       </div>
       <div class="history-item-footer-container">
         <div class="history-item-memo-box">
+          ${item.weather ? `<div class="history-weather-line" style="font-size: 13px; margin-bottom: 4px; font-weight: bold; color: var(--color-text-muted);">${getWeatherIcon(item.weather)}${item.temp !== undefined && item.temp !== '' ? ` ${item.temp}℃` : ''}</div>` : ''}
           ${item.memo ? `<strong>メモ:</strong> ${escapeHtml(item.memo)}` : ''}
         </div>
         <button class="delete-btn" onclick="deleteRecord('${item.id}')" aria-label="削除">🗑️ 消す</button>
@@ -1002,12 +1013,40 @@ function generateReport() {
       countEvening++;
     }
     
-    // メモの結合
+    // メモの結合 (天気情報もさりげなく挿入)
     let memoText = '';
-    if (m && m.memo) memoText += `朝: ${escapeHtml(m.memo)}`;
-    if (e && e.memo) {
-      if (memoText) memoText += '<br>';
-      memoText += `夜: ${escapeHtml(e.memo)}`;
+    
+    // 朝の天気
+    let mWeatherText = '';
+    if (m && m.weather) {
+      const wIcon = getWeatherIcon(m.weather);
+      const tText = m.temp !== undefined && m.temp !== '' ? `${m.temp}℃` : '';
+      mWeatherText = `<span style="font-size: 13px;">${wIcon} ${tText}</span>`;
+    }
+    
+    // 夜の天気
+    let eWeatherText = '';
+    if (e && e.weather) {
+      const wIcon = getWeatherIcon(e.weather);
+      const tText = e.temp !== undefined && e.temp !== '' ? `${e.temp}℃` : '';
+      eWeatherText = `<span style="font-size: 13px;">${wIcon} ${tText}</span>`;
+    }
+
+    if (m) {
+      const mMemo = m.memo ? escapeHtml(m.memo) : '';
+      const wText = mWeatherText ? `${mWeatherText}` : '';
+      if (wText || mMemo) {
+        memoText += `朝: ${wText}${wText && mMemo ? ' | ' : ''}${mMemo}`;
+      }
+    }
+    
+    if (e) {
+      const eMemo = e.memo ? escapeHtml(e.memo) : '';
+      const wText = eWeatherText ? `${eWeatherText}` : '';
+      if (wText || eMemo) {
+        if (memoText) memoText += '<br>';
+        memoText += `夜: ${wText}${wText && eMemo ? ' | ' : ''}${eMemo}`;
+      }
     }
     
     const tr = document.createElement('tr');
@@ -1216,3 +1255,54 @@ window.stepValue = function(id, diff) {
   
   input.value = val;
 };
+
+// 17. 会津若松市金川町の天気自動取得
+async function fetchKaneyamaWeather() {
+  const display = document.getElementById('header-weather-display');
+  if (!display) return;
+  
+  // 会津若松市金川町の緯度経度
+  const lat = 37.502;
+  const lon = 139.943;
+  
+  try {
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FTokyo`);
+    if (!response.ok) throw new Error('APIエラー');
+    const data = await response.json();
+    
+    if (data && data.current_weather) {
+      const code = data.current_weather.weathercode;
+      const temp = Math.round(data.current_weather.temperature);
+      
+      // 天気コードのマッピング
+      let weatherCode = 'sunny';
+      if (code === 0) weatherCode = 'sunny';
+      else if (code >= 1 && code <= 3) weatherCode = 'cloudy';
+      else if (code >= 45 && code <= 48) weatherCode = 'cloudy';
+      else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) weatherCode = 'rainy';
+      else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) weatherCode = 'snowy';
+      
+      // 隠しフィールドの更新
+      document.getElementById('input-weather').value = weatherCode;
+      document.getElementById('input-temp').value = temp;
+      
+      // 画面表示更新（アイコンのみ ＋ 気温）
+      const wIcon = getWeatherIcon(weatherCode);
+      display.textContent = `${wIcon} ${temp}℃`;
+      display.title = `会津若松市金川町の天気: ${wIcon} ${temp}℃`;
+    }
+  } catch (err) {
+    console.error('天気取得エラー:', err);
+    // エラー時は非表示
+    display.textContent = '';
+  }
+}
+
+// お天気コードを対応する絵文字アイコンに変換するヘルパー
+function getWeatherIcon(code) {
+  if (code === 'sunny') return '☀️';
+  if (code === 'cloudy') return '☁️';
+  if (code === 'rainy') return '☔';
+  if (code === 'snowy') return '⛄';
+  return '☀️';
+}

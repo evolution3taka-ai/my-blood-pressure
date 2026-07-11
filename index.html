@@ -118,8 +118,9 @@
 
     <!-- 入力カード -->
     <main class="card">
-      <div class="card-title">
-        <span>✏️</span> 血圧を記録する
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div><span>✏️</span> 血圧を記録する</div>
+        <div id="header-weather-display" style="font-size: 13px; font-weight: bold; color: var(--color-text-muted); display: flex; align-items: center; gap: 4px;" title="会津若松市金川町の天気"></div>
       </div>
       
       <!-- 朝・夜の切り替え -->
@@ -190,6 +191,10 @@
         </div>
 
       </div>
+      <!-- お天気情報の隠しフィールド -->
+      <input type="hidden" id="input-weather" value="sunny">
+      <input type="hidden" id="input-temp" value="">
+
       <!-- メモ -->
       <div class="memo-group">
         <label for="memo" class="ampm-switch-label">メモ (体調やひとこと)</label>
